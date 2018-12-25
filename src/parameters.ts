@@ -1,9 +1,7 @@
-const Hoek = require('hoek');
-const Utilities = require('../lib/utilities');
+import Hoek from 'hoek';
+import * as Utilities from './utilities';
 
-const parameters = (module.exports = {});
-
-parameters.allowedProps = [
+export const allowedProps = [
     'name',
     'in',
     'description',
@@ -31,7 +29,7 @@ parameters.allowedProps = [
 //parameters.allowedParameterTypes = ['body','path','header','query','formData','file'];
 
 // add none swagger property needed to flag touched state of required property
-parameters.allowedProps.push('optional');
+allowedProps.push('optional');
 
 /**
  * takes a swagger schema object and returns a parameters object
@@ -40,8 +38,8 @@ parameters.allowedProps.push('optional');
  * @param  {String} parameterType
  * @return {Object}
  */
-parameters.fromProperties = function(schemaObj, parameterType) {
-    let out = [];
+export function fromProperties (schemaObj, parameterType) {
+    let out: { [key: string]: any} = [];
     // if (this.allowedParameterTypes.indexOf(parameterType) === -1) {
     //     return out;
     // }
@@ -70,7 +68,7 @@ parameters.fromProperties = function(schemaObj, parameterType) {
             delete item.schema['x-alternatives'];
         }
 
-        item = Utilities.removeProps(item, this.allowedProps);
+        item = Utilities.removeProps(item, allowedProps);
         if (!Hoek.deepEqual(item.schema, { 'type': 'object' }, { prototype: false })) {
 
             // Clean up item shallow level properties and schema nested properties
@@ -100,7 +98,7 @@ parameters.fromProperties = function(schemaObj, parameterType) {
                 item.required = false;
             }
 
-            item = Utilities.removeProps(item, this.allowedProps);
+            item = Utilities.removeProps(item, allowedProps);
             out.push(item);
         });
     }

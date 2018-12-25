@@ -1,13 +1,10 @@
-const Hoek = require('hoek');
-const Joi = require('joi');
-
-const info = module.exports = {};
-
+import Hoek from 'hoek';
+import Joi from 'joi';
 
 /**
  * default data for info
  */
-info.defaults = {
+export const defaults = {
     title: 'API documentation',
     version: '0.0.1'
 };
@@ -16,7 +13,7 @@ info.defaults = {
 /**
  * schema for info
  */
-info.schema = Joi.object({
+export const schema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string(),
     termsOfService: Joi.string(),
@@ -39,9 +36,9 @@ info.schema = Joi.object({
  * @param  {Object} options
  * @return {Object}
  */
-info.build = function (options) {
+export function build (options) {
 
-    var out = (options.info) ? Hoek.applyToDefaults(info.defaults, options.info) : info.defaults;
-    Joi.assert(out, info.schema);
+    var out = (options.info) ? Hoek.applyToDefaults(defaults, options.info) : defaults;
+    Joi.assert(out, schema);
     return out;
 };

@@ -1,18 +1,17 @@
-const Hoek = require('hoek');
-const Joi = require('joi');
-const utilities = module.exports = {};
+import Hoek from 'hoek';
+import Joi, { JoiObject } from 'joi';
 
 
 /**
 	* is passed item an object
 	*
-	* @param  {Object} obj
+	* @param  {unknown} obj
 	* @return {Boolean}
 	*/
-utilities.isObject = function (obj) {
+export function isObject (obj: Object): obj is Object {
 
     return obj !== null && obj !== undefined && typeof obj === 'object' && !Array.isArray(obj);
-};
+}
 
 
 /**
@@ -21,11 +20,11 @@ utilities.isObject = function (obj) {
      * @param  {Object} obj
      * @return {Boolean}
      */
-utilities.isFunction = function (obj) {
+export function isFunction (obj: Function): obj is Function {
 
     // remove `obj.constructor` test as it was always true
     return !!(obj && obj.call && obj.apply);
-},
+}
 
 
 /**
@@ -34,16 +33,17 @@ utilities.isFunction = function (obj) {
      * @param  {Object} obj
      * @return {Boolean}
      */
-utilities.isRegex = function (obj) {
+export function isRegex(obj: Object): obj is RegExp {
 
     // base on https://github.com/ljharb/is-regex/
     // has a couple of edge use cases for different env  - hence coverage:off
     /* $lab:coverage:off$ */
+
     const regexExec = RegExp.prototype.exec;
-    const tryRegexExec = function tryRegexExec (value) {
+    const tryRegexExec = function tryRegexExec (value: string) {
 
         try {
-            regexExec.call(value);
+            regexExec.call(null, value);
             return true;
         } catch (e) {
             return false;
@@ -56,22 +56,21 @@ utilities.isRegex = function (obj) {
     if (typeof obj !== 'object') {
         return false;
     }
-    return hasToStringTag ? tryRegexExec(obj) : toStr.call(obj) === regexClass;
+    return hasToStringTag ? tryRegexExec(obj.toString()) : toStr.call(obj) === regexClass;
     /* $lab:coverage:on$ */
-};
+}
 
 
 /**
 	* does string start with test, temp before native support
 	*
 	* @param  {String} str
-    * @param  {String} str
+    * @param  {String} test
 	* @return {Boolean}
 	*/
-utilities.startsWith = function (str, test) {
-
+export function startsWith (str: string, test: string): boolean {
     return (str.indexOf(test) === 0);
-};
+}
 
 
 /**
@@ -80,16 +79,14 @@ utilities.startsWith = function (str, test) {
 	* @param  {Object} obj
 	* @return {Boolean}
 	*/
-utilities.hasProperties = function (obj) {
-
-    let key;
-    for (key in obj) {
+export function hasProperties (obj: object): boolean {
+    for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
             return true;
         }
     }
     return false;
-};
+}
 
 
 /**
@@ -98,30 +95,27 @@ utilities.hasProperties = function (obj) {
 	* @param  {Object} obj
 	* @return {Object}
 	*/
-utilities.deleteEmptyProperties = function (obj) {
-
-    let key;
-    for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            // delete properties undefined values
-            if (obj[key] === undefined || obj[key] === null) {
+export function deleteEmptyProperties (obj: { [key: string]: any}): object {
+    Object.getOwnPropertyNames(obj).forEach(key => {
+        // delete properties undefined values
+        if (obj[key] === undefined || obj[key] === null) {
+            delete obj[key];
+        }
+        // allow blank objects for example or default properties
+        if (['default', 'example', 'security'].indexOf(key) === -1) {
+            // delete array with no values
+            if (Array.isArray(obj[key]) && obj[key].length === 0) {
                 delete obj[key];
             }
-            // allow blank objects for example or default properties
-            if (['default', 'example', 'security'].indexOf(key) === -1) {
-                // delete array with no values
-                if (Array.isArray(obj[key]) && obj[key].length === 0) {
-                    delete obj[key];
-                }
-                // delete object which does not have its own properties
-                if (utilities.isObject(obj[key]) && utilities.hasProperties(obj[key]) === false) {
-                    delete obj[key];
-                }
+            // delete object which does not have its own properties
+            if (isObject(obj[key]) && hasProperties(obj[key]) === false) {
+                delete obj[key];
             }
         }
-    }
+    });
+
     return obj;
-};
+}
 
 
 /**
@@ -130,20 +124,20 @@ utilities.deleteEmptyProperties = function (obj) {
     * @param  {Array} array
     * @return {Object}
     */
-utilities.first = function (array) {
+export function first (array: Array<any>): any {
 
     return Array.isArray(array) ? array[0] : undefined;
-};
+}
 
 
 /**
     * sort array so it has a set firstItem
     *
     * @param  {Array} array
-    * @param  {Obj} firstItem
+    * @param  {object} firstItem
     * @return {Array}
     */
-utilities.sortFirstItem = function (array, firstItem) {
+export function sortFirstItem (array: Array<any>, firstItem: object): Array<any> {
 
     let out = array;
     if (firstItem) {
@@ -156,18 +150,18 @@ utilities.sortFirstItem = function (array, firstItem) {
         });
     }
     return out;
-};
+}
 
 
 /**
     * replace a value in an array - does not keep order
     *
     * @param  {Array} array
-    * @param  {Obj} current
-    * @param  {Obj} replacement
+    * @param  {object} current
+    * @param  {object} replacement
     * @return {Array}
     */
-utilities.replaceValue = function (array, current, replacement) {
+export function replaceValue (array: Array<any>, current: object, replacement: object): Array<any> {
 
     if (array && current && replacement) {
         array = Hoek.clone(array);
@@ -177,7 +171,7 @@ utilities.replaceValue = function (array, current, replacement) {
         }
     }
     return array;
-};
+}
 
 
 /**
@@ -187,13 +181,12 @@ utilities.replaceValue = function (array, current, replacement) {
  * @param  {String} findKey
  * @return {Boolean}
  */
-utilities.hasKey = function (obj, findKey) {
+export function hasKey (obj: { [key: string]: any}, findKey: string): boolean {
 
     for (var key in obj) {
         if (obj.hasOwnProperty(key)) {
             if (typeof obj[key] === 'object') {
-                if (this.hasKey(obj[key], findKey) === true) {
-
+                if (hasKey(obj[key], findKey) === true) {
                     return true;
                 }
             }
@@ -203,7 +196,7 @@ utilities.hasKey = function (obj, findKey) {
         }
     }
     return false;
-};
+}
 
 
 /**
@@ -214,12 +207,12 @@ utilities.hasKey = function (obj, findKey) {
  * @param  {String} replaceKey
  * @return {Object}
  */
-utilities.findAndRenameKey = function (obj, findKey, replaceKey) {
+export function findAndRenameKey (obj: { [key: string]: any}, findKey: string, replaceKey: string): object {
 
     for (var key in obj) {
         if (obj.hasOwnProperty(key)) {
             if (typeof obj[key] === 'object') {
-                this.findAndRenameKey(obj[key], findKey, replaceKey);
+                findAndRenameKey(obj[key], findKey, replaceKey);
             }
             if (key === findKey) {
                 if (replaceKey) {
@@ -230,7 +223,7 @@ utilities.findAndRenameKey = function (obj, findKey, replaceKey) {
         }
     }
     return obj;
-};
+}
 
 
 
@@ -242,11 +235,11 @@ utilities.findAndRenameKey = function (obj, findKey, replaceKey) {
 
 	* @return {Object}
 	*/
-utilities.removeProps = function (obj, listOfProps) {
+export function removeProps (obj: { [key: string]: any}, listOfProps: Array<any>): object {
 
     for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
-            if (listOfProps.indexOf(key) === -1 && this.startsWith(key, 'x-') === false) {
+            if (listOfProps.indexOf(key) === -1 && startsWith(key, 'x-') === false) {
                 delete obj[key];
                 //console.log('Removed property: ' + key + ' from object: ', JSON.stringify(obj));
             }
@@ -262,8 +255,7 @@ utilities.removeProps = function (obj, listOfProps) {
  * @param  {Object} joiObj
  * @return {Boolean}
  */
-utilities.isJoi = function (joiObj) {
-
+export function isJoi (joiObj: JoiObject): joiObj is JoiObject {
     return (joiObj && joiObj.isJoi) ? true : false;
 };
 
@@ -274,9 +266,9 @@ utilities.isJoi = function (joiObj) {
  * @param  {Object} joiObj
  * @return {Boolean}
  */
-utilities.hasJoiChildren = function (joiObj) {
+export function hasJoiChildren (joiObj: any): boolean {
 
-    return (utilities.isJoi(joiObj) && Hoek.reach(joiObj, '_inner.children')) ? true : false;
+    return (isJoi(joiObj) && Hoek.reach(joiObj, '_inner.children')) ? true : false;
 };
 
 
@@ -286,10 +278,10 @@ utilities.hasJoiChildren = function (joiObj) {
  * @param  {Object} joiObj
  * @return {Boolean}
  */
-utilities.hasJoiMeta = function (joiObj) {
+export function hasJoiMeta (joiObj: any): boolean {
 
-    return (utilities.isJoi(joiObj) && Array.isArray(joiObj._meta)) ? true : false;
-};
+    return (isJoi(joiObj) && Array.isArray((joiObj as any)._meta)) ? true : false;
+}
 
 
 /**
@@ -297,14 +289,13 @@ utilities.hasJoiMeta = function (joiObj) {
  *
  * @param  {Object} joiObj
  * @param  {String} propertyName
- * @return {Object || Undefined}
  */
-utilities.getJoiMetaProperty = function (joiObj, propertyName) {
+export function getJoiMetaProperty (joiObj: any, propertyName: string): string|undefined {
 
     // get headers added using meta function
-    if (utilities.isJoi(joiObj) && utilities.hasJoiMeta(joiObj)) {
+    if (isJoi(joiObj) && hasJoiMeta(joiObj)) {
 
-        const meta = joiObj._meta;
+        const meta = (joiObj as any)._meta;
         let i = meta.length;
         while (i--) {
             if (meta[i][propertyName]) {
@@ -313,7 +304,7 @@ utilities.getJoiMetaProperty = function (joiObj, propertyName) {
         }
     }
     return undefined;
-};
+}
 
 
 /**
@@ -322,7 +313,7 @@ utilities.getJoiMetaProperty = function (joiObj, propertyName) {
  * @param  {Object} joiObj
  * @return {String || Null}
  */
-utilities.geJoiLabel = function (joiObj) {
+export function getJoiLabel (joiObj: object): string|null {
 
     // old version
     /* $lab:coverage:off$ */
@@ -336,7 +327,7 @@ utilities.geJoiLabel = function (joiObj) {
     }
 
     return null;
-};
+}
 
 
 /**
@@ -346,13 +337,13 @@ utilities.geJoiLabel = function (joiObj) {
  * @param  {Object} obj
  * @return {Object}
  */
-utilities.toJoiObject = function (obj) {
+export function toJoiObject (obj: any): JoiObject {
 
-    if (utilities.isJoi(obj) === false && utilities.isObject(obj)) {
+    if (isJoi(obj) === false && isObject(obj)) {
         return Joi.object(obj);
     }
     return obj;
-};
+}
 
 
 /**
@@ -360,12 +351,12 @@ utilities.toJoiObject = function (obj) {
  *
  * @return {Function}
  */
-utilities.firstBy = (function () {
+export const firstBy = (function () {
 
     // code from https://github.com/Teun/thenBy.js
     // has its own tests
     /* $lab:coverage:off$ */
-    var makeCompareFunction = function (f, direction) {
+    var makeCompareFunction = function (f, direction?) {
 
         if (typeof (f) !== 'function') {
             var prop = f;
@@ -392,7 +383,7 @@ utilities.firstBy = (function () {
         return f;
     };
     /* mixin for the `thenBy` property */
-    var extend = function (f, d) {
+    var extend = function (f, d?) {
 
         f = makeCompareFunction(f, d);
         f.thenBy = tb;
@@ -403,12 +394,11 @@ utilities.firstBy = (function () {
        which is applied in case the first one returns 0 (equal)
        returns a new compare function, which has a `thenBy` method as well */
     var tb = function (y, d) {
-
-        var self = this;
         y = makeCompareFunction(y, d);
-        return extend(function (a, b) {
+        
+        return extend((a, b) => {
 
-            return self(a, b) || y(a, b);
+            return this(a, b) || y(a, b);
         });
     };
     return extend;
@@ -423,7 +413,7 @@ utilities.firstBy = (function () {
  * @param  {String} path
  * @return {String}
  */
-utilities.createId = function (method, path) {
+export function createId (method: string, path: string): string {
 
     const self = this;
     if (path.indexOf('/') > -1) {
@@ -438,7 +428,7 @@ utilities.createId = function (method, path) {
         path = self.toTitleCase(path);
     }
     return method.toLowerCase() + path;
-};
+}
 
 
 /**
@@ -447,12 +437,12 @@ utilities.createId = function (method, path) {
  * @param  {String} word
  * @return {String}
  */
-utilities.toTitleCase = function (word) {
+export function toTitleCase (word: string): string {
 
     return word.replace(/\w\S*/g, (txt) => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
-};
+}
 
 
 /**
@@ -463,7 +453,7 @@ utilities.toTitleCase = function (word) {
  * @param  {Array} options
  * @return {String}
  */
-utilities.replaceInPath = function (path, applyTo, options) {
+export function replaceInPath (path: string, applyTo: Array<any>, options: Array<any>): string {
 
     options.forEach((option) => {
         if (applyTo.indexOf(option.replaceIn) > -1 || option.replaceIn === 'all') {
@@ -471,7 +461,7 @@ utilities.replaceInPath = function (path, applyTo, options) {
         }
     });
     return path;
-};
+}
 
 
 /**
@@ -480,13 +470,13 @@ utilities.replaceInPath = function (path, applyTo, options) {
  * @param  {String} str
  * @return {String}
  */
-utilities.removeTrailingSlash = function (str) {
+export function removeTrailingSlash (str: string): string {
 
     if (str.endsWith('/')) {
         return str.slice(0, -1);
     }
     return str;
-};
+}
 
 /**
  * Assign vendor extensions: x-* to the target. This mutates target.
@@ -495,7 +485,7 @@ utilities.removeTrailingSlash = function (str) {
  * @param  {Object} source
  * @return {Object}
  */
-utilities.assignVendorExtensions = function (target, source) {
+export function assignVendorExtensions (target: object, source: object): object {
     if (!this.isObject(target) || !this.isObject(source)) {
         return target;
     }
@@ -508,4 +498,4 @@ utilities.assignVendorExtensions = function (target, source) {
         }
     }
     return target;
-};
+}

@@ -1,31 +1,65 @@
-const Hoek = require('hoek');
-const Joi = require('joi');
-const JSONDeRef = require('json-schema-ref-parser');
-const Filter = require('../lib/filter');
-const Group = require('../lib/group');
-const Sort = require('../lib/sort');
-const Info = require('../lib/info');
-const Paths = require('../lib/paths');
-const Tags = require('../lib/tags');
-const Validate = require('../lib/validate');
-const Utilities = require('../lib/utilities');
+import Hoek from 'hoek';
+import * as Joi from "joi";
+import $RefParser from 'json-schema-ref-parser';
+import * as Filter from './filter';
+import * as Group from './group';
+import * as Sort from './sort';
+import * as Info from './info';
+import { Paths } from './paths';
+import * as Tags from './tags';
+import * as Validate from './validate';
+import * as Utilities from './utilities';
+import * as Hapi from "hapi";
+import { IPluginOptions, MimeTypes } from './defaults';
 
-const builder = (module.exports = {});
-const internals = {};
+export type SwaggerSchemes = 'http'|'https'|'ws'|'wss';
+export interface ISwagger2Schema extends Partial<ISwaggerDocument>{
+    swagger: '2.0';
+}
+
+export interface ISwaggerDocument {
+    info: any;
+    paths: any;
+    schema: string;
+    host: string;
+    basePath: string;
+    schemes: SwaggerSchemes[];
+    consumes: MimeTypes;
+    produces: MimeTypes;
+    definitions: any;
+    parameters: any;
+    responses: any;
+    securityDefinitions: any;
+    security: any;
+    grouping: 'path'|'tags'
+    tagsGroupingFilter: Function;
+    tags: any;
+    cors: boolean;
+    externalDocs: { description: string, url: string},
+    cache: {
+        expiresIn: number,
+        expiresAt: string,
+        generateTimeout: number
+    }
+}
 
 /**
  * default data for swagger root object
  */
-builder.default = {
+const data: ISwagger2Schema = {
     swagger: '2.0',
     host: 'localhost',
     basePath: '/'
-};
+}
+
+export default data;
+
+type SwaggerSchema = {[K in keyof ISwagger2Schema]};
 
 /**
  * schema for swagger root object
  */
-builder.schema = Joi.object({
+export const swaggerSchema: SwaggerSchema = {
     swagger: Joi.string().valid('2.0').required(),
     info: Joi.any(),
     host: Joi.string(), // JOI hostname validator too strict
@@ -54,29 +88,30 @@ builder.schema = Joi.object({
         expiresAt: Joi.string(),
         generateTimeout: Joi.number()
     })
-}).pattern(/^x-/, Joi.any());
+};
+
+export const schema = Joi.object(swaggerSchema).pattern(/^x-/, Joi.any());
 
 /**
  * gets the Swagger JSON
  *
- * @param  {Object} settings
- * @param  {Object} request
- * @param  {Function} callback
+ * @param settings
+ * @param request
  */
-builder.getSwaggerJSON = async (settings, request) => {
+export async function getSwaggerJSON (settings, request: Hapi.Request) {
     // remove items that cannot be changed by user
     delete settings.swagger;
 
     // collect root information
-    builder.default.host = internals.getHost(request);
-    builder.default.schemes = [internals.getSchema(request)];
+    data.host = getHost(request);
+    data.schemes = [getSchema(request)];
 
-    settings = Hoek.applyToDefaults(builder.default, settings);
-    if (settings.basePath !== '/') {
+    settings = Hoek.applyToDefaults(data, settings);
+    if (settings.basePath && settings.basePath !== '/') {
         settings.basePath = Utilities.removeTrailingSlash(settings.basePath);
     }
-    let out = internals.removeNoneSchemaOptions(settings);
-    Joi.assert(out, builder.schema);
+    let out = removeNoneSchemaOptions(settings);
+    Joi.assert(out, schema);
 
     out.info = Info.build(settings);
     out.tags = Tags.build(settings);
@@ -87,8 +122,8 @@ builder.getSwaggerJSON = async (settings, request) => {
     Sort.paths(settings.sortPaths, routes);
 
     // filter routes displayed based on tags passed in query string
-    if (request.query.tags) {
-        let filterTags = request.query.tags.split(',');
+    if (Utilities.isObject(request.query) && (request.query as any).tags) { // for some reason type gaurd didn't work
+        let filterTags = (request.query as any).tags.split(',');
         routes = Filter.byTags(filterTags, routes);
     }
 
@@ -107,14 +142,14 @@ builder.getSwaggerJSON = async (settings, request) => {
     if (Utilities.hasProperties(pathData['x-alt-definitions'])) {
         out['x-alt-definitions'] = pathData['x-alt-definitions'];
     }
-    out = internals.removeNoneSchemaOptions(out);
+    out = removeNoneSchemaOptions(out);
 
     if (settings.debug) {
         await Validate.log(out, settings.log);
     }
 
     if (settings.deReference === true) {
-        return builder.dereference(out);
+        return dereference(out);
     } else {
         return out;
     }
@@ -126,13 +161,15 @@ builder.getSwaggerJSON = async (settings, request) => {
  * @param  {Object} schema
  * @param  {Function} callback
  */
-builder.dereference = async (schema) => {
+export async function dereference (schema) {
+    const parser = new $RefParser(); // Typings for $RefParser static methods are incorrect
 
     try {
+        const json = await parser.dereference(schema);
 
-        const json = await JSONDeRef.dereference(schema);
         delete json.definitions;
         delete json['x-alt-definitions'];
+
         return json;
 
     } catch(err) {
@@ -146,7 +183,7 @@ builder.dereference = async (schema) => {
  * @param  {Object} request
  * @return {String}
  */
-internals.getHost = function(request) {
+function getHost (request) {
     const proxyHost = request.headers['x-forwarded-host'] || request.headers['disguised-host'] || '';
     if (proxyHost) {
         return proxyHost;
@@ -178,7 +215,7 @@ internals.getHost = function(request) {
  * @param  {Object} connection
  * @return {String}
  */
-internals.getSchema = function(request) {
+function getSchema (request) {
     const forwardedProtocol = request.headers['x-forwarded-proto'];
 
     if (forwardedProtocol) {
@@ -207,7 +244,7 @@ internals.getSchema = function(request) {
  * @param  {Object} options
  * @return {Object}
  */
-internals.removeNoneSchemaOptions = function(options) {
+function removeNoneSchemaOptions(options) {
     let out = Hoek.clone(options);
     [
         'debug',

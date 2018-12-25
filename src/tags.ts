@@ -1,13 +1,10 @@
-const Joi = require('joi');
-
-const tags = module.exports = {};
-
+import Joi from 'joi';
 
 /**
  * schema for tags
  *
  */
-tags.schema = Joi.array().items(
+export const schema = Joi.array().items(
     Joi.object({
         name: Joi.string().required(),
         description: Joi.string(),
@@ -28,12 +25,12 @@ tags.schema = Joi.array().items(
  * @param  {Object} settings
  * @return {Object}
  */
-tags.build = function (settings) {
+export function build (settings) {
 
     let out = [];
 
     if (settings.tags) {
-        Joi.assert(settings.tags, tags.schema);
+        Joi.assert(settings.tags, schema);
         out = settings.tags;
     }
     return out;

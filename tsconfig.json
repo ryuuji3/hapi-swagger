@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "sourceMap": true,
+    "outDir": "lib",
+    "strict": false,
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "resolveJsonModule": true
+  },
+  "exclude": [
+    "node_modules",
+    "examples",
+    ".github",
+    "test",
+    "public",
+    "tsconfig.json"
+  ],
+  "include": [
+    "src"
+  ]
+}

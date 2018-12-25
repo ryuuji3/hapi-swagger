@@ -1,8 +1,4 @@
-const Hoek = require('hoek');
-
-const filter = module.exports = {};
-
-
+import Hoek from "hoek";
 /*
  * Filters routes based on tags
  *
@@ -25,7 +21,7 @@ const filter = module.exports = {};
  * @param  {Array} routes
  * @return {Array}
  */
-filter.byTags = function (tags, routes) {
+export function byTags (tags: Array<any>, routes: Array<any>): Array<any> {
 
     let tag;
 

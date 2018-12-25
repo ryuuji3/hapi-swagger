@@ -1,8 +1,4 @@
-const Utilities = require('../lib/utilities');
-
-const sort = module.exports = {};
-
-
+import * as Utilities from './utilities';
 
 /**
  * sort routes by path then method
@@ -11,7 +7,7 @@ const sort = module.exports = {};
  * @param  {Array} routes
  * @return {Array}
  */
-sort.paths = function (sortType, routes) {
+export function paths (sortType, routes) {
 
 
     if (sortType === 'path-method') {

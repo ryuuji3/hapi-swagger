@@ -1,25 +1,22 @@
-const Utilities = require('../lib/utilities');
-const group = module.exports = {};
-
-
+import * as Utilities from './utilities';
 
 /**
  * append group property with name created from url path segments
  *   - adds group property to route
  *   - returns array of group names
  *
- * @param  {Int} pathPrefixSize
+ * @param  {Number} pathPrefixSize
  * @param  {String} basePath
  * @param  {Array} routes
  * @param  {Array} pathReplacements
  * @return {Array}
  */
-group.appendGroupByPath = function (pathPrefixSize, basePath, routes, pathReplacements) {
+export function appendGroupByPath(pathPrefixSize: number, basePath: string, routes: Array<any>, pathReplacements: Array<any>): Array<any> {
 
-    let out = [];
+    let out: string[] = [];
 
     routes.forEach((route) => {
-        let prefix = group.getNameByPath(pathPrefixSize, basePath, route.path, pathReplacements);
+        let prefix = getNameByPath(pathPrefixSize, basePath, route.path, pathReplacements);
         // append tag reference to route
         route.group = [prefix];
         if (out.indexOf(prefix) === -1) {
@@ -38,9 +35,9 @@ group.appendGroupByPath = function (pathPrefixSize, basePath, routes, pathReplac
  * @param  {String} basePath
  * @param  {String} path
  * @param  {Array} pathReplacements
- * @return {Array}
+ * @return {String}
  */
-group.getNameByPath = function (pathPrefixSize, basePath, path, pathReplacements) {
+export function getNameByPath(pathPrefixSize: Number, basePath: string, path: string, pathReplacements: Array<any>): string {
 
 
     if (pathReplacements) {

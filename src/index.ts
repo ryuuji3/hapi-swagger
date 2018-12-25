@@ -1,14 +1,12 @@
-const Hoek = require('hoek');
-const Joi = require('joi');
-const Path = require('path');
-const Querystring = require('querystring');
-const Url = require('url');
-
-const Pack = require('../package.json');
-const Defaults = require('../lib/defaults');
-const Builder = require('../lib/builder');
-const Utilities = require('../lib/utilities');
-
+import Hoek from 'hoek';
+import Joi from 'joi';
+import Path from 'path';
+import Querystring from 'querystring';
+import Url, { UrlWithParsedQuery } from 'url';
+import Pack = require('../package.json');
+import * as Defaults from './defaults';
+import * as Builder from './builder';
+import * as Utilities from './utilities';
 
 // schema for plug-in properties
 const schema = Joi.object({
@@ -53,8 +51,8 @@ const schema = Joi.object({
  * @param  {Object} options
  * @param  {Function} next
  */
-exports.plugin = {
-
+export const plugin = {
+    
     name: Pack.name,
     version: Pack.version,
     once: true,
@@ -220,7 +218,9 @@ exports.plugin = {
             } else {
                 exposeSettings = Hoek.clone(settings);
             }
-            return Builder.getSwaggerJSON(exposeSettings, request, callback);
+            return Builder.getSwaggerJSON(exposeSettings, request)
+                .then(result => callback(null, result))
+                .catch(result => callback(result));
         });
         /* $lab:coverage:on$ */
 
@@ -235,7 +235,7 @@ exports.plugin = {
  * @param  {Object} settings
  * @return {Object}
  */
-const appendDataContext = function (plugin, settings) {
+function appendDataContext (plugin, settings) {
 
     plugin.ext('onPostHandler', (request, h) => {
 
@@ -289,18 +289,18 @@ const appendDataContext = function (plugin, settings) {
  * @param  {String} qsValue
  * @return {String}
  */
-const appendQueryString = function (url, qsName, qsValue) {
+function appendQueryString (url: string, qsName?: string, qsValue?: string) {
 
-    let urlObj = Url.parse(url);
+    const urlObj = new URL(url);
+
+    urlObj.search = "";
+
     if (qsName && qsValue) {
-        urlObj.query = Querystring.parse(qsName + '=' + qsValue);
-        urlObj.search = '?' + encodeURIComponent(qsName) + '=' + encodeURIComponent(qsValue);
-    } else {
-        urlObj.search = '';
+        urlObj.searchParams.set(qsName, qsValue);
     }
-    return urlObj.format(urlObj);
-};
 
+    return urlObj.href;
+};
 
 /**
  * finds any keyPrefix in securityDefinitions - also add x- to name
@@ -308,7 +308,7 @@ const appendQueryString = function (url, qsName, qsValue) {
  * @param  {Object} settings
  * @return {String}
  */
-const findAPIKeyPrefix = function (settings) {
+function findAPIKeyPrefix (settings) {
 
     // Need JWT plugin to work with Hapi v17+ to test this again
     /* $lab:coverage:off$ */

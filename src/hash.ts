@@ -6,9 +6,9 @@
  * this is for diff strings and not cryptography
  *
  * @param  {String} str
- * @return {Int}
+ * @return {Number}
  */
-module.exports = function (str) {
+export default function (str: string): Number {
 
     let hash = 5381;
     let i = str.length;

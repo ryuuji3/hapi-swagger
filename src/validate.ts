@@ -1,8 +1,4 @@
-const SwaggerParser = require('swagger-parser');
-
-const validate = module.exports = {};
-
-
+import SwaggerParser from 'swagger-parser';
 
 /**
  * validate a JSON swagger document and log output
@@ -12,7 +8,7 @@ const validate = module.exports = {};
  * @param  {Object} logFnc
  * @return {Object}
  */
-validate.log = async (doc, logFnc) => {
+export async function log (doc, logFnc) {
     try {
         await SwaggerParser.validate(doc);
         logFnc(['validation', 'info'], 'PASSED - The swagger.json validation passed.');
@@ -31,7 +27,7 @@ validate.log = async (doc, logFnc) => {
  * @param  {Object} next
  * @return {Object}
  */
-validate.test = async (doc) => {
+export async function test (doc) {
 
     try {
         await SwaggerParser.validate(doc);
