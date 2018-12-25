@@ -2,13 +2,13 @@ import Hoek from 'hoek';
 import Joi from 'joi';
 
 import * as Parameters from './parameters';
-import { Definitions } from './definitions';
-import { Properties } from './properties';
-import { Responses } from './responses';
+import Definitions from './definitions';
+import Properties from './properties';
+import Responses from './responses';
 import * as Utilities from './utilities';
 import * as Hapi from "hapi";
 
-export class Paths {
+export default class Paths {
     public definitions: Definitions;
     public properties: Properties;
     public responses: Responses;

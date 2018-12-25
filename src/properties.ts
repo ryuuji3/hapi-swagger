@@ -1,9 +1,9 @@
 import Hoek from 'hoek';
-import { Definitions } from './definitions';
+import Definitions from './definitions';
 import * as Utilities from './utilities';
 import { AnySchema } from 'joi';
 
-export class Properties {
+export default class Properties {
     definitions: Definitions;
     simpleTypePropertyMap: object;
     complexTypePropertyMap: object;

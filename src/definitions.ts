@@ -2,7 +2,7 @@ import Hoek from 'hoek';
 import Hash from './hash';
 import * as Utilities from './utilities';
 
-export class Definitions {
+export default class Definitions {
     constructor(public settings) { }
 
     /**

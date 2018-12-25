@@ -3,10 +3,12 @@ import Joi from 'joi';
 import Path from 'path';
 import Querystring from 'querystring';
 import Url, { UrlWithParsedQuery } from 'url';
-import Pack = require('../package.json');
 import * as Defaults from './defaults';
 import * as Builder from './builder';
 import * as Utilities from './utilities';
+import fs from "fs";
+
+const Pack = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, "utf8"));
 
 // schema for plug-in properties
 const schema = Joi.object({

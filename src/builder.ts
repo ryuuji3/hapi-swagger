@@ -5,7 +5,7 @@ import * as Filter from './filter';
 import * as Group from './group';
 import * as Sort from './sort';
 import * as Info from './info';
-import { Paths } from './paths';
+import Paths from './paths';
 import * as Tags from './tags';
 import * as Validate from './validate';
 import * as Utilities from './utilities';

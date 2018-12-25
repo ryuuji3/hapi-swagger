@@ -1,10 +1,10 @@
 import HTTPStatus from 'http-status';
 import Hoek from 'hoek';
-import { Definitions } from './definitions';
-import { Properties } from './properties';
+import Definitions from './definitions';
+import Properties from './properties';
 import * as Utilities from './utilities';
 
-export class Responses {
+export default class Responses {
     definitions: Definitions;
     properties: Properties;
 
