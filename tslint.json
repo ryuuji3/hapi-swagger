@@ -1,0 +1,24 @@
+{
+    "extends": ["tslint:latest", "tslint-config-prettier", "tslint-plugin-prettier"],
+    "rules": {
+        "prettier": true,
+        "object-literal-sort-keys": false,
+        "no-console": false,
+        "indent": [true, "spaces", 4],
+        "quotes": [
+            2,
+            "single"
+        ],
+        "linebreak-style": [
+            true,
+            "LF"
+        ],
+        "semicolon": [
+            true,
+            "always"
+        ],
+        "no-shadowed-variable": false,
+        "prefer-conditional-expression": false,
+        "no-implicit-dependencies": [true, "dev"]
+    }
+}

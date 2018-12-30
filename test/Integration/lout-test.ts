@@ -1,12 +1,13 @@
-const Code = require('code');
-const Joi = require('joi');
-const Lab = require('lab');
-const Helper = require('../helper.js');
+import { expect } from "code";
+import * as Hapi from "hapi";
+import Joi from "joi";
+import { script } from "lab";
+import { IPluginOptions } from "../../src/defaults";
+import * as Helper from "../helper";
 
-const expect = Code.expect;
-const lab = (exports.lab = Lab.script());
+export const lab = script();
 
-lab.experiment('lout examples', () => {
+lab.experiment("lout examples", () => {
     // these are example are taken from https://github.com/hapijs/lout/blob/master/test/routes/default.js
     /*
     Copyright (c) 2012-2014, Walmart and other contributors.
@@ -34,27 +35,29 @@ lab.experiment('lout examples', () => {
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     */
-    const routes = [
+    const routes: Hapi.ServerRoute[] = [
         {
-            method: 'GET',
-            path: '/test',
-            config: {
+            method: "GET",
+            path: "/test",
+            options: {
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.string().insensitive().required()
+                        param1: Joi.string()
+                            .insensitive()
+                            .required()
                     }
                 },
-                tags: ['api'],
-                description: 'Test GET',
-                notes: 'test note'
+                tags: ["api"],
+                description: "Test GET",
+                notes: "test note"
             }
         },
         {
-            method: 'GET',
-            path: '/another/test',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/another/test",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -64,10 +67,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/zanother/test',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/zanother/test",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -77,65 +80,65 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'POST',
-            path: '/test',
-            config: {
-                tags: ['api'],
+            method: "POST",
+            path: "/test",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param2: Joi.string().valid('first', 'last'),
-                        param3: 'third',
-                        param4: 42
+                        param2: Joi.string().valid("first", "last"),
+                        param3: Joi.string().valid("third"),
+                        param4: Joi.number().valid(42)
                     }
                 }
             }
         },
         {
-            method: 'DELETE',
-            path: '/test',
-            config: {
-                tags: ['api'],
+            method: "DELETE",
+            path: "/test",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param2: Joi.string().valid('first', 'last')
+                        param2: Joi.string().valid("first", "last")
                     }
                 }
             }
         },
         {
-            method: 'PUT',
-            path: '/test',
-            config: {
-                tags: ['api'],
+            method: "PUT",
+            path: "/test",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param2: Joi.string().valid('first', 'last')
+                        param2: Joi.string().valid("first", "last")
                     }
                 }
             }
         },
         {
-            method: 'PATCH',
-            path: '/test',
-            config: {
-                tags: ['api'],
+            method: "PATCH",
+            path: "/test",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param2: Joi.string().valid('first', 'last'),
+                        param2: Joi.string().valid("first", "last"),
                         param3: Joi.number().valid(42)
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/notincluded',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/notincluded",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 plugins: {
                     lout: false
@@ -143,10 +146,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/nested',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/nested",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -159,10 +162,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/rootobject',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/rootobject",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: Joi.object({
@@ -172,18 +175,14 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/rootarray',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/rootarray",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: Joi.array()
-                        .items(
-                            Joi.string().required(),
-                            Joi.object({ param1: Joi.number() }),
-                            Joi.number().forbidden()
-                        )
+                        .items(Joi.string().required(), Joi.object({ param1: Joi.number() }), Joi.number().forbidden())
                         .min(2)
                         .max(5)
                         .length(3)
@@ -191,33 +190,35 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/complexarray',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/complexarray",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: Joi.array()
-                        .ordered('foo', 'bar')
+                        .ordered("foo", "bar")
                         .items(
                             Joi.string().required(),
-                            Joi.string().valid('four').forbidden(),
+                            Joi.string()
+                                .valid("four")
+                                .forbidden(),
                             Joi.object({ param1: Joi.number() }),
                             Joi.number().forbidden()
                         )
                         .min(2)
                         .max(5)
                         .length(3)
-                        .ordered('bar', 'bar')
+                        .ordered("bar", "bar")
                         .items(Joi.number().required())
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/path/{pparam}/test',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/path/{pparam}/test",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     params: {
@@ -227,10 +228,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/emptyobject',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/emptyobject",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -240,26 +241,23 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/alternatives',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/alternatives",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.alternatives().try(
-                            Joi.number().required(),
-                            Joi.string().valid('first', 'last')
-                        )
+                        param1: Joi.alternatives().try(Joi.number().required(), Joi.string().valid("first", "last"))
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withnestedalternatives',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withnestedalternatives",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -268,11 +266,11 @@ lab.experiment('lout examples', () => {
                                 {
                                     param3: Joi.object({
                                         param4: Joi.number().example(5)
-                                    }).description('this is cool too')
+                                    }).description("this is cool too")
                                 },
                                 Joi.number().min(42)
                             )
-                        }).description('something really cool'),
+                        }).description("something really cool"),
                         param2: Joi.array()
                             .items(
                                 Joi.object({
@@ -280,32 +278,36 @@ lab.experiment('lout examples', () => {
                                         {
                                             param3: Joi.object({
                                                 param4: Joi.number().example(5)
-                                            }).description('this is cool too')
+                                            }).description("this is cool too")
                                         },
-                                        Joi.array().items('foo', 'bar'),
-                                        Joi.number().min(42).required(),
-                                        Joi.number().max(42).required()
+                                        Joi.array().items("foo", "bar"),
+                                        Joi.number()
+                                            .min(42)
+                                            .required(),
+                                        Joi.number()
+                                            .max(42)
+                                            .required()
                                     )
-                                }).description('all the way down')
+                                }).description("all the way down")
                             )
-                            .description('something really cool')
+                            .description("something really cool")
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/novalidation',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/novalidation",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler
             }
         },
         {
-            method: 'GET',
-            path: '/withresponse',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withresponse",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 response: {
                     schema: {
@@ -315,10 +317,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withstatus',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withstatus",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 response: {
                     schema: {
@@ -329,17 +331,17 @@ lab.experiment('lout examples', () => {
                             param2: Joi.string()
                         },
                         404: {
-                            error: 'Failure'
+                            error: Joi.string().allow("Failure")
                         }
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withpojoinarray',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withpojoinarray",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -351,10 +353,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'POST',
-            path: '/withnestedrulesarray',
-            config: {
-                tags: ['api'],
+            method: "POST",
+            path: "/withnestedrulesarray",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     payload: {
@@ -374,26 +376,24 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withhtmlnote',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withhtmlnote",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.string().notes(
-                            '<span class="htmltypenote">HTML type note</span>'
-                        )
+                        param1: Joi.string().notes('<span class="htmltypenote">HTML type note</span>')
                     }
                 },
                 notes: '<span class="htmlroutenote">HTML route note</span>'
             }
         },
         {
-            method: 'GET',
-            path: '/withnotesarray',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withnotesarray",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -406,23 +406,25 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withexample',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withexample",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.string().regex(/^\w{1,5}$/).example('abcde')
+                        param1: Joi.string()
+                            .regex(/^\w{1,5}$/)
+                            .example("abcde")
                     }
                 }
             }
         },
         {
-            method: 'POST',
-            path: '/denybody',
-            config: {
-                tags: ['api'],
+            method: "POST",
+            path: "/denybody",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     payload: false
@@ -430,10 +432,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'POST',
-            path: '/rootemptyobject',
-            config: {
-                tags: ['api'],
+            method: "POST",
+            path: "/rootemptyobject",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     payload: Joi.object()
@@ -441,10 +443,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withnestedexamples',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withnestedexamples",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -464,10 +466,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withmeta',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withmeta",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -480,23 +482,23 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withunit',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withunit",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.number().unit('ms')
+                        param1: Joi.number().unit("ms")
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withdefaultvalue',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withdefaultvalue",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -506,10 +508,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withbinaryencoding',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withbinaryencoding",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -517,47 +519,49 @@ lab.experiment('lout examples', () => {
                             .min(42)
                             .max(128)
                             .length(64)
-                            .encoding('base64')
+                            .encoding("base64")
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withdate',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withdate",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.date().min('1-1-1974').max('12-31-2020')
+                        param1: Joi.date()
+                            .min("1-1-1974")
+                            .max("12-31-2020")
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withpeersconditions',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withpeersconditions",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
                         param1: Joi.object()
-                            .and('a', 'b', 'c')
-                            .or('a', 'b', 'c')
-                            .xor('a', 'b', 'c')
-                            .with('a', ['b', 'c'])
-                            .without('a', ['b', 'c'])
+                            .and("a", "b", "c")
+                            .or("a", "b", "c")
+                            .xor("a", "b", "c")
+                            .with("a", ["b", "c"])
+                            .without("a", ["b", "c"])
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withpattern',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withpattern",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -569,10 +573,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withallowunknown',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withallowunknown",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -583,10 +587,10 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withstringspecifics',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withstringspecifics",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -607,32 +611,32 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withconditionalalternatives',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withconditionalalternatives",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
                         param1: Joi.alternatives()
-                            .when('b', {
+                            .when("b", {
                                 is: 5,
                                 then: Joi.string(),
                                 otherwise: Joi.number()
                                     .required()
-                                    .description('Things and stuff')
+                                    .description("Things and stuff")
                             })
-                            .when('a', {
+                            .when("a", {
                                 is: true,
                                 then: Joi.date(),
                                 otherwise: Joi.any()
                             }),
                         param2: Joi.alternatives()
-                            .when('b', {
+                            .when("b", {
                                 is: 5,
                                 then: Joi.string()
                             })
-                            .when('a', {
+                            .when("a", {
                                 is: true,
                                 otherwise: Joi.any()
                             })
@@ -641,88 +645,80 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/withreferences',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withreferences",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.ref('a.b'),
-                        param2: Joi.ref('$x')
+                        param1: Joi.ref("a.b"),
+                        param2: Joi.ref("$x")
+                    } as any // typings are incorrect
+                }
+            }
+        },
+        {
+            method: "GET",
+            path: "/withassert",
+            options: {
+                tags: ["api"],
+                handler: Helper.defaultHandler,
+                validate: {
+                    query: {
+                        param1: Joi.object().assert("d.e", Joi.ref("a.c"), "equal to a.c"),
+                        param2: Joi.object().assert("$x", Joi.ref("b.e"), "equal to b.e")
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withassert',
-            config: {
-                tags: ['api'],
-                handler: Helper.defaultHandler,
-                validate: {
-                    query: {
-                        param1: Joi.object().assert(
-                            'd.e',
-                            Joi.ref('a.c'),
-                            'equal to a.c'
-                        ),
-                        param2: Joi.object().assert(
-                            '$x',
-                            Joi.ref('b.e'),
-                            'equal to b.e'
-                        )
-                    }
-                }
-            }
-        },
-        {
-            method: 'GET',
-            path: '/withproperties',
-            vhost: 'john.doe',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withproperties",
+            vhost: "john.doe",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 cors: {
                     maxAge: 12345
                 },
-                jsonp: 'callback'
+                jsonp: "callback"
             }
         },
         {
-            method: 'OPTIONS',
-            path: '/optionstest',
+            method: "OPTIONS",
+            path: "/optionstest",
             handler: Helper.defaultHandler
         },
         {
-            method: 'GET',
-            path: '/withrulereference',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withrulereference",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
-                        param1: Joi.date().min(Joi.ref('param2')),
+                        param1: Joi.date().min(Joi.ref("param2")),
                         param2: Joi.date()
                     }
                 }
             }
         },
         {
-            method: 'GET',
-            path: '/withcorstrue',
-            vhost: 'john.doe',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withcorstrue",
+            vhost: "john.doe",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 cors: true
             }
         },
         {
-            method: 'GET',
-            path: '/withstrip',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/withstrip",
+            options: {
+                tags: ["api"],
                 handler: Helper.defaultHandler,
                 validate: {
                     query: {
@@ -733,23 +729,22 @@ lab.experiment('lout examples', () => {
             }
         },
         {
-            method: 'GET',
-            path: '/internal',
-            config: {
-                tags: ['api'],
+            method: "GET",
+            path: "/internal",
+            options: {
+                tags: ["api"],
                 isInternal: true,
                 handler: Helper.defaultHandler
             }
         }
     ];
 
-    lab.test('all routes parsed', async() => {
+    lab.test("all routes parsed", async () => {
+        const response = await Helper.getSwaggerJSON(routes);
+        const result = response.result as IPluginOptions;
 
-        const server = await Helper.createServer({}, routes);
-        const response = await server.inject({ method: 'GET', url: '/swagger.json' });
         expect(response.statusCode).to.equal(200);
         // the 40 to 45 difference is in one route having a number of methods
-        expect(response.result.paths).to.have.length(40);
-
+        expect(result.paths).to.have.length(40);
     });
 });

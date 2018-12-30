@@ -1,16 +1,21 @@
-import HTTPStatus from 'http-status';
-import Hoek from 'hoek';
-import Definitions from './definitions';
-import Properties from './properties';
-import * as Utilities from './utilities';
+import Hoek from "hoek";
+import HTTPStatus from "http-status";
+import Definitions from "./definitions";
+import Properties from "./properties";
+import * as Utilities from "./utilities";
 
 export default class Responses {
-    definitions: Definitions;
-    properties: Properties;
+    public definitions: Definitions;
+    public properties: Properties;
 
     constructor(public settings, public definitionCollection?, public altDefinitionCollection?, definitionCache?) {
         this.definitions = new Definitions(settings);
-        this.properties = new Properties(settings, this.definitionCollection, this.altDefinitionCollection, definitionCache);
+        this.properties = new Properties(
+            settings,
+            this.definitionCollection,
+            this.altDefinitionCollection,
+            definitionCache
+        );
     }
 
     /**
@@ -23,25 +28,21 @@ export default class Responses {
      * @param  {Boolean} isAlt
      * @return {Object}
      */
-    build (userDefindedSchemas, defaultSchema, statusSchemas, useDefinitions, isAlt) {
-
-        let out = {
-            default: undefined
-        };
-
+    public build(userDefindedSchemas, defaultSchema, statusSchemas, useDefinitions, isAlt = false) {
+        let out = {};
 
         // add defaultSchema to statusSchemas if needed
-        if (Utilities.hasProperties(defaultSchema) && (Hoek.reach(statusSchemas, '200') === undefined)) {
+        if (Utilities.hasProperties(defaultSchema) && Hoek.reach(statusSchemas, "200") === undefined) {
             statusSchemas[200] = defaultSchema;
         }
 
         // loop for each status and convert schema into a definition
         if (Utilities.hasProperties(statusSchemas)) {
-            for (let key in statusSchemas) {
+            Object.keys(statusSchemas).forEach(key => {
                 // name, joiObj, parameterType, useDefinitions, isAlt
-                let response = this.getResponse(key, statusSchemas[key], useDefinitions, isAlt);
+                const response = this.getResponse(key, statusSchemas[key], useDefinitions, isAlt);
                 out[key] = response;
-            }
+            });
         }
 
         // use plug-in options overrides to enchance hapi objects and properties
@@ -52,22 +53,22 @@ export default class Responses {
         // make sure 200 status always has a schema #237
         if (out[200] && out[200].schema === undefined) {
             out[200].schema = {
-                'type': 'string'
+                type: "string"
             };
         }
 
         // make sure there is a default if no other responses are found
         if (Utilities.hasProperties(out) === false) {
-            out.default = {
-                'schema': {
-                    'type': 'string'
+            (out as any).default = {
+                schema: {
+                    type: "string"
                 },
-                'description': 'Successful'
+                description: "Successful"
             };
         }
 
         return Utilities.deleteEmptyProperties(out);
-    };
+    }
 
     /**
      * replaces discovered response objects with user defined objects
@@ -78,48 +79,49 @@ export default class Responses {
      * @param  {Boolean} isAlt
      * @return {Object}
      */
-    optionOverride (discoveredSchemas, userDefindedSchemas, useDefinitions, isAlt) {
+    public optionOverride(discoveredSchemas, userDefindedSchemas, useDefinitions, isAlt) {
+        for (const key in userDefindedSchemas) {
+            if (userDefindedSchemas.hasOwnProperty(key)) {
+                // create a new object by cloning - dont modify user definded objects
+                let out = Hoek.clone(userDefindedSchemas[key]);
 
-        for (let key in userDefindedSchemas) {
+                // test for any JOI objects
+                if (
+                    Hoek.reach(userDefindedSchemas[key], "schema.isJoi") &&
+                    userDefindedSchemas[key].schema.isJoi === true
+                ) {
+                    out = this.getResponse(key, userDefindedSchemas[key].schema, useDefinitions, isAlt);
+                    out.description = userDefindedSchemas[key].description;
 
-            // create a new object by cloning - dont modify user definded objects
-            let out = Hoek.clone(userDefindedSchemas[key]);
-
-            // test for any JOI objects
-            if (Hoek.reach(userDefindedSchemas[key], 'schema.isJoi') && userDefindedSchemas[key].schema.isJoi === true) {
-                out = this.getResponse(key, userDefindedSchemas[key].schema, useDefinitions, isAlt);
-                out.description = userDefindedSchemas[key].description;
-
-                if (userDefindedSchemas[key].headers) {
-                    out.headers = userDefindedSchemas[key].headers;
+                    if (userDefindedSchemas[key].headers) {
+                        out.headers = userDefindedSchemas[key].headers;
+                    }
+                } else if (!out.description) {
+                    out.description = HTTPStatus[key].replace("OK", "Successful");
                 }
 
-            } else if (!out.description) {
-                out.description = HTTPStatus[key].replace('OK', 'Successful');
-            }
+                // overwrite discovery with user definded
+                if (!discoveredSchemas[key] && out) {
+                    // if it does not exist create it
+                    discoveredSchemas[key] = out;
+                } else {
+                    // override all user defined values
+                    for (const item in out) {
+                        if (out.hasOwnProperty(item)) {
+                            const value = out[item];
 
-
-            // overwrite discovery with user definded
-            if (!discoveredSchemas[key] && out) {
-                // if it does not exist create it
-                discoveredSchemas[key] = out;
-            }
-            else {
-                // override all user defined values
-
-                for (let item in out) {
-
-                    const value = out[item];
-
-                    if (value !== undefined) {
-                        discoveredSchemas[key][item] = value;
+                            if (value !== undefined) {
+                                discoveredSchemas[key][item] = value;
+                            }
+                        }
                     }
                 }
+                discoveredSchemas[key] = Utilities.deleteEmptyProperties(discoveredSchemas[key]);
             }
-            discoveredSchemas[key] = Utilities.deleteEmptyProperties(discoveredSchemas[key]);
         }
+
         return discoveredSchemas;
-    };
+    }
 
     /**
      * takes a joi object and creates a response object for a given http status code
@@ -131,24 +133,23 @@ export default class Responses {
      * @param  {Boolean} isAlt
      * @return {Object}
      */
-    getResponse (statusCode, joiObj, useDefinitions, isAlt) {
-
+    public getResponse(statusCode, joiObj, useDefinitions, isAlt) {
         let out;
-        //name, joiObj, parent, parameterType, useDefinitions, isAlt
-        let outProperties = this.properties.parseProperty(null, joiObj, null, 'body', useDefinitions, false);
+        // name, joiObj, parent, parameterType, useDefinitions, isAlt
+        const outProperties = this.properties.parseProperty(null, joiObj, null, "body", useDefinitions, false);
         out = {
-            'description': Hoek.reach(joiObj, '_description'),
-            'schema': outProperties
+            description: Hoek.reach(joiObj, "_description"),
+            schema: outProperties
         };
 
-        out.headers = Utilities.getJoiMetaProperty(joiObj, 'headers');
-        out.examples = Utilities.getJoiMetaProperty(joiObj, 'examples');
-        delete out.schema['x-meta'];
+        out.headers = Utilities.getJoiMetaProperty(joiObj, "headers");
+        out.examples = Utilities.getJoiMetaProperty(joiObj, "examples");
+        delete out.schema["x-meta"];
         out = Utilities.deleteEmptyProperties(out);
 
         // default description if not given
         if (!out.description && HTTPStatus[statusCode]) {
-            out.description = HTTPStatus[statusCode].replace('OK', 'Successful');
+            out.description = HTTPStatus[statusCode].replace("OK", "Successful");
         }
 
         return out;

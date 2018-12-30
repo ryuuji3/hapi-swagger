@@ -1,4 +1,4 @@
-import SwaggerParser from 'swagger-parser';
+import SwaggerParser from "swagger-parser";
 
 /**
  * validate a JSON swagger document and log output
@@ -8,17 +8,16 @@ import SwaggerParser from 'swagger-parser';
  * @param  {Object} logFnc
  * @return {Object}
  */
-export async function log (doc, logFnc) {
+export async function log(doc, logFnc) {
     try {
         await SwaggerParser.validate(doc);
-        logFnc(['validation', 'info'], 'PASSED - The swagger.json validation passed.');
+        logFnc(["validation", "info"], "PASSED - The swagger.json validation passed.");
         return true;
-    }   catch(err) {
-        logFnc(['validation', 'error'], `FAILED - ${err.message}`);
+    } catch (err) {
+        logFnc(["validation", "error"], `FAILED - ${err.message}`);
         return false;
     }
-};
-
+}
 
 /**
  * validate a JSON swagger document
@@ -27,14 +26,11 @@ export async function log (doc, logFnc) {
  * @param  {Object} next
  * @return {Object}
  */
-export async function test (doc) {
-
+export async function test(doc) {
     try {
         await SwaggerParser.validate(doc);
         return true;
-    } catch(err) {
+    } catch (err) {
         return false;
     }
-
-
-};
+}

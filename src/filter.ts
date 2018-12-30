@@ -13,7 +13,6 @@ import Hoek from "hoek";
  *         will show routes WITH 'movies' AND 'directors' AND NO 'actors'
  */
 
-
 /**
  * filters routes based on tags
  *
@@ -21,22 +20,21 @@ import Hoek from "hoek";
  * @param  {Array} routes
  * @return {Array}
  */
-export function byTags (tags: Array<any>, routes: Array<any>): Array<any> {
-
+export function byTags(tags: any[], routes: any[]): any[] {
     let tag;
 
-    return routes.filter((route) => {
-
+    return routes.filter(route => {
         let exit;
+        // tslint:disable-next-line prefer-for-of
         for (let i = 0; i < tags.length; i++) {
             switch (tags[i].substring(0, 1)) {
-                case '-': // exclude tags that match this case
+                case "-": // exclude tags that match this case
                     tag = tags[i].substring(1, tags[i].length);
                     if (Hoek.intersect(route.settings.tags, [tag]).length > 0) {
                         exit = true;
                     }
                     break;
-                case '+': // (+) filter out tagged paths that do not have this tag!
+                case "+": // (+) filter out tagged paths that do not have this tag!
                     tag = tags[i].substring(1, tags[i].length);
                     if (Hoek.intersect(route.settings.tags, [tag]).length === 0) {
                         exit = true;
@@ -58,4 +56,4 @@ export function byTags (tags: Array<any>, routes: Array<any>): Array<any> {
         // fallback or no tag defined
         return false;
     });
-};
+}

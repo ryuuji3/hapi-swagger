@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 /**
  * schema for tags
@@ -12,12 +12,11 @@ export const schema = Joi.array().items(
             description: Joi.string(),
             url: Joi.string().uri()
         }),
-        'x-order': Joi.number()
+        "x-order": Joi.number()
     })
-        .label('Tag')
+        .label("Tag")
         .optional()
 );
-
 
 /**
  * build the swagger tag section
@@ -25,8 +24,7 @@ export const schema = Joi.array().items(
  * @param  {Object} settings
  * @return {Object}
  */
-export function build (settings) {
-
+export function build(settings) {
     let out = [];
 
     if (settings.tags) {
@@ -34,4 +32,4 @@ export function build (settings) {
         out = settings.tags;
     }
     return out;
-};
+}

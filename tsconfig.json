@@ -3,7 +3,6 @@
     "target": "es6",
     "module": "commonjs",
     "sourceMap": true,
-    "rootDir": "src",
     "outDir": "lib",
     "strict": false,
     "esModuleInterop": true,
@@ -14,11 +13,11 @@
     "node_modules",
     "examples",
     ".github",
-    "test",
     "public",
-    "tsconfig.json"
+    "tsconfig.json",
   ],
   "include": [
-    "src"
+    "src",
+    "test"
   ]
 }

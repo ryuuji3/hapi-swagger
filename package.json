@@ -34,8 +34,11 @@
         "swagger-parser": "4.0.2"
     },
     "devDependencies": {
+        "@types/code": "^4.0.5",
+        "@types/hapi": "^17.8.2",
         "@types/hoek": "^4.1.3",
         "@types/joi": "^14.0.1",
+        "@types/lab": "^11.1.0",
         "@types/node": "^10.12.18",
         "blipp": "^3.0.0",
         "chalk": "^2.3.1",
@@ -55,19 +58,26 @@
         "js2xmlparser": "^3.0.0",
         "jsonwebtoken": "^8.1.1",
         "lab": "^16.1.0",
+        "lab-transform-typescript": "^3.0.1",
+        "prettier": "^1.15.3",
         "swagger-client": "^3.8.22",
+        "tslint": "^5.12.0",
+        "tslint-config-prettier": "^1.17.0",
+        "tslint-plugin-prettier": "^2.0.1",
         "typescript": "^3.2.2",
         "vision": "^5.3.1",
         "wreck": "^14.0.2"
     },
     "scripts": {
         "start": "node ./bin/test-server.js",
-        "test": "lab -L -t 100",
-        "test-cov-html": "lab -r html -o coverage.html",
+        "test": "lab --sourcemaps --transform node_modules/lab-transform-typescript",
+        "test-cov-html": "lab -r html -o coverage.html --sourcemaps --transform node_modules/lab-transform-typescript",
         "test-cov-coveralls": "./node_modules/.bin/lab -r lcov | ./node_modules/.bin/coveralls",
         "precommit": "npm test",
         "prepush": "npm test",
-        "build": "tsc"
+        "build": "tsc",
+        "lint": "tslint -p tsconfig.json",
+        "lint:fix": "npm run lint -- --fix"
     },
     "peerDependencies": {
         "hapi": "^17.0.0"

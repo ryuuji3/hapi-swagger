@@ -1,35 +1,35 @@
-import Hoek from 'hoek';
-import * as Utilities from './utilities';
+import Hoek from "hoek";
+import * as Utilities from "./utilities";
 
 export const allowedProps = [
-    'name',
-    'in',
-    'description',
-    'required',
-    'schema',
-    'type',
-    'format',
-    'allowEmptyValue',
-    'items',
-    'collectionFormat',
-    'default',
-    'maximum',
-    'exclusiveMaximum',
-    'minimum',
-    'exclusiveMinimum',
-    'maxLength',
-    'minLength',
-    'pattern',
-    'maxItems',
-    'minItems',
-    'uniqueItems',
-    'enum',
-    'multipleOf'
+    "name",
+    "in",
+    "description",
+    "required",
+    "schema",
+    "type",
+    "format",
+    "allowEmptyValue",
+    "items",
+    "collectionFormat",
+    "default",
+    "maximum",
+    "exclusiveMaximum",
+    "minimum",
+    "exclusiveMinimum",
+    "maxLength",
+    "minLength",
+    "pattern",
+    "maxItems",
+    "minItems",
+    "uniqueItems",
+    "enum",
+    "multipleOf"
 ];
-//parameters.allowedParameterTypes = ['body','path','header','query','formData','file'];
+// parameters.allowedParameterTypes = ['body','path','header','query','formData','file'];
 
 // add none swagger property needed to flag touched state of required property
-allowedProps.push('optional');
+allowedProps.push("optional");
 
 /**
  * takes a swagger schema object and returns a parameters object
@@ -38,8 +38,8 @@ allowedProps.push('optional');
  * @param  {String} parameterType
  * @return {Object}
  */
-export function fromProperties (schemaObj, parameterType) {
-    let out: { [key: string]: any} = [];
+export function fromProperties(schemaObj, parameterType) {
+    const out: { [key: string]: any } = [];
     // if (this.allowedParameterTypes.indexOf(parameterType) === -1) {
     //     return out;
     // }
@@ -63,14 +63,13 @@ export function fromProperties (schemaObj, parameterType) {
         }
 
         // reinstate x-alternatives at parameter level
-        if (schemaObj['x-alternatives']) {
-            item['x-alternatives'] = schemaObj['x-alternatives'];
-            delete item.schema['x-alternatives'];
+        if (schemaObj["x-alternatives"]) {
+            item["x-alternatives"] = schemaObj["x-alternatives"];
+            delete item.schema["x-alternatives"];
         }
 
         item = Utilities.removeProps(item, allowedProps);
-        if (!Hoek.deepEqual(item.schema, { 'type': 'object' }, { prototype: false })) {
-
+        if (!Hoek.deepEqual(item.schema, { type: "object" }, { prototype: false })) {
             // Clean up item shallow level properties and schema nested properties
             item = Utilities.deleteEmptyProperties(item);
             item.schema = Utilities.deleteEmptyProperties(item.schema);
@@ -80,12 +79,12 @@ export function fromProperties (schemaObj, parameterType) {
 
         // if its an array of parameters
     } else {
-        //console.log('b', JSON.stringify(schemaObj) + '\n');
+        // console.log('b', JSON.stringify(schemaObj) + '\n');
 
         // object to array
         const keys = Object.keys(schemaObj.properties);
         keys.forEach((element, index) => {
-            let key = keys[index];
+            const key = keys[index];
             let item = schemaObj.properties[key];
             item.name = key;
             item.in = parameterType;
@@ -103,4 +102,4 @@ export function fromProperties (schemaObj, parameterType) {
         });
     }
     return out;
-};
+}

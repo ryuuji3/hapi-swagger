@@ -1,4 +1,4 @@
-import * as Utilities from './utilities';
+import * as Utilities from "./utilities";
 
 /**
  * sort routes by path then method
@@ -7,15 +7,11 @@ import * as Utilities from './utilities';
  * @param  {Array} routes
  * @return {Array}
  */
-export function paths (sortType, routes) {
-
-
-    if (sortType === 'path-method') {
-        //console.log('path-method')
-        routes.sort(
-            Utilities.firstBy('path').thenBy('method')
-        );
+export function paths(sortType, routes) {
+    if (sortType === "path-method") {
+        // console.log('path-method')
+        routes.sort(Utilities.firstBy("path").thenBy("method"));
     }
 
     return routes;
-};
+}

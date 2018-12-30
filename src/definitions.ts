@@ -1,9 +1,9 @@
-import Hoek from 'hoek';
-import Hash from './hash';
-import * as Utilities from './utilities';
+import Hoek from "hoek";
+import Hash from "./hash";
+import * as Utilities from "./utilities";
 
 export default class Definitions {
-    constructor(public settings) { }
+    constructor(public settings) {}
 
     /**
      * appends a new definition object to a given collection, returns a string reference name
@@ -15,35 +15,31 @@ export default class Definitions {
      * @return {String}
      */
     public append(definitionName, definition, currentCollection, settings) {
-        let out = null;
-
         definition = this.formatProperty(definition);
 
         // remove required if its not an array
-        //if (definition.required && !Array.isArray(definition.required)) {
+        // if (definition.required && !Array.isArray(definition.required)) {
         //    delete definition.required;
-        //}
+        // }
 
         // remove unneeded properties
         delete definition.name;
 
         // find existing definition by this definitionName
-        let foundDefinition = currentCollection[definitionName];
+        const foundDefinition = currentCollection[definitionName];
         if (foundDefinition) {
             // deep compare objects
             if (Hoek.deepEqual(foundDefinition, definition)) {
                 // return existing definitionName if existing object is exactly the same
-                out = definitionName;
+                return definitionName;
             } else {
                 // create new definition
-                out = this.internalAppend(definitionName, definition, currentCollection, true, settings);
+                return this.internalAppend(definitionName, definition, currentCollection, true, settings);
             }
         } else {
             // create new definition
-            out = this.internalAppend(definitionName, definition, currentCollection, false, settings);
+            return this.internalAppend(definitionName, definition, currentCollection, false, settings);
         }
-
-        return out;
     }
 
     /**
@@ -55,8 +51,7 @@ export default class Definitions {
      * @param  {Object} settings
      * @return {String}
      */
-    private internalAppend (definitionName, definition, currentCollection, forceDynamicName, settings) {
-
+    private internalAppend(definitionName, definition, currentCollection, forceDynamicName, settings) {
         let out;
         let foundDefinitionName;
 
@@ -71,15 +66,13 @@ export default class Definitions {
         } else {
             // else create a new item using definitionName or next model number
             if (forceDynamicName) {
-                if (settings.definitionPrefix === 'useLabel') {
-                    out = this.nextModelName(definitionName + ' ', currentCollection);
+                if (settings.definitionPrefix === "useLabel") {
+                    out = this.nextModelName(definitionName + " ", currentCollection);
+                } else {
+                    out = this.nextModelName("Model ", currentCollection);
                 }
-                else {
-                    out = this.nextModelName('Model ', currentCollection);
-                }
-            }
-            else {
-                out = definitionName || this.nextModelName('Model ', currentCollection);
+            } else {
+                out = definitionName || this.nextModelName("Model ", currentCollection);
             }
             currentCollection[out] = definition;
         }
@@ -92,8 +85,7 @@ export default class Definitions {
      * @param  {Object} parameter
      * @return {Object}
      */
-    private formatProperty (obj) {
-
+    private formatProperty(obj) {
         // add $ref directly to parent and delete schema
         //    if (obj.schema) {
         //        obj.$ref = obj.schema.$ref;
@@ -115,8 +107,7 @@ export default class Definitions {
      * @param  {Object} obj
      * @return {String}
      */
-    private hash (obj) {
-
+    private hash(obj) {
         const str = JSON.stringify(obj);
         return Hash(str);
     }
@@ -128,12 +119,12 @@ export default class Definitions {
      * @param  {Object} currentCollection
      * @return {String}
      */
-    private nextModelName (nextModelNamePrefix, currentCollection) {
+    private nextModelName(nextModelNamePrefix, currentCollection) {
         let highest = 0;
         let key;
         for (key in currentCollection) {
             if (Utilities.startsWith(key, nextModelNamePrefix)) {
-                let num = parseInt(key.replace(nextModelNamePrefix, ''), 10) || 0;
+                const num = parseInt(key.replace(nextModelNamePrefix, ""), 10) || 0;
                 if (num && num > highest) {
                     highest = num;
                 }
@@ -150,18 +141,19 @@ export default class Definitions {
      * @param  {Object} currentCollection
      * @return {String || Undefined}
      */
-    private hasDefinition (definition, currentCollection) {
+    private hasDefinition(definition, currentCollection) {
+        const hash = this.hash(definition);
 
-        let key;
-        let hash = this.hash(definition);
+        for (const key in currentCollection) {
+            if (currentCollection.hasOwnProperty(key)) {
+                const obj = currentCollection[key];
 
-        for (key in currentCollection) {
-            let obj = currentCollection[key];
-
-            if (hash === this.hash(obj)) {
-                return key;
+                if (hash === this.hash(obj)) {
+                    return key;
+                }
             }
         }
+
         return null;
     }
 }

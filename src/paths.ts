@@ -1,14 +1,20 @@
-import Hoek from 'hoek';
-import Joi from 'joi';
+import Hoek from "hoek";
+import Joi from "joi";
 
-import * as Parameters from './parameters';
-import Definitions from './definitions';
-import Properties from './properties';
-import Responses from './responses';
-import * as Utilities from './utilities';
 import * as Hapi from "hapi";
+import Definitions from "./definitions";
+import * as Parameters from "./parameters";
+import Properties from "./properties";
+import Responses from "./responses";
+import * as Utilities from "./utilities";
 
 export default class Paths {
+    public static getDefaultStructures() {
+        return {
+            properties: {},
+            parameters: []
+        };
+    }
     public definitions: Definitions;
     public properties: Properties;
     public responses: Responses;
@@ -19,7 +25,6 @@ export default class Paths {
         this.definitions = new Definitions(settings);
         this.properties = new Properties(settings, {}, {});
         this.responses = new Responses(settings, {}, {});
-
 
         this.defaults = {
             responses: {}
@@ -38,7 +43,7 @@ export default class Paths {
             produces: Joi.array().items(Joi.string()),
             parameters: Joi.array().items(Joi.object()),
             responses: Joi.object().required(),
-            schemes: Joi.array().items(Joi.string().valid(['http', 'https', 'ws', 'wss'])),
+            schemes: Joi.array().items(Joi.string().valid(["http", "https", "ws", "wss"])),
             deprecated: Joi.boolean(),
             security: Joi.array().items(Joi.object())
         });
@@ -51,53 +56,52 @@ export default class Paths {
      * @param  {Object} routes
      * @return {Object}
      */
-    build (routes) {
-        let routesData = [];
+    public build(routes) {
+        const routesData = [];
 
         // loop each route
-        routes.forEach((route) => {
-            let routeOptions = Hoek.reach(route, 'settings.plugins.hapi-swagger') || {};
+        routes.forEach(route => {
+            const routeOptions = Hoek.reach(route, "settings.plugins.hapi-swagger") || {};
+
             const routeData = {
                 path: route.path,
                 method: route.method.toUpperCase(),
                 description: route.settings.description,
                 notes: route.settings.notes,
-                tags: Hoek.reach(route, 'settings.tags'),
-                queryParams: Hoek.reach(route, 'settings.validate.query'),
-                pathParams: Hoek.reach(route, 'settings.validate.params'),
-                payloadParams: Hoek.reach(route, 'settings.validate.payload'),
-                responseSchema: Hoek.reach(route, 'settings.response.schema'),
-                responseStatus: Hoek.reach(route, 'settings.response.status'),
-                headerParams: Hoek.reach(route, 'settings.validate.headers'),
-                consumes: Hoek.reach(routeOptions, 'consumes') || null,
-                produces: Hoek.reach(routeOptions, 'produces') || null,
-                responses: Hoek.reach(routeOptions, 'responses') || null,
-                payloadType: Hoek.reach(routeOptions, 'payloadType') || null,
-                security: Hoek.reach(routeOptions, 'security') || null,
-                order: Hoek.reach(routeOptions, 'order') || null,
-                deprecated: Hoek.reach(routeOptions, 'deprecated') || null,
-                id: Hoek.reach(routeOptions, 'id') || null,
-                groups: route.group,
+                tags: Hoek.reach(route, "settings.tags"),
+                queryParams: Hoek.reach(route, "settings.validate.query"),
+                pathParams: Hoek.reach(route, "settings.validate.params"),
+                payloadParams: Hoek.reach(route, "settings.validate.payload"),
+                responseSchema: Hoek.reach(route, "settings.response.schema"),
+                responseStatus: Hoek.reach(route, "settings.response.status"),
+                headerParams: Hoek.reach(route, "settings.validate.headers"),
+                consumes: Hoek.reach(routeOptions, "consumes") || null,
+                produces: Hoek.reach(routeOptions, "produces") || null,
+                responses: Hoek.reach(routeOptions, "responses") || null,
+                payloadType: Hoek.reach(routeOptions, "payloadType") || null,
+                security: Hoek.reach(routeOptions, "security") || null,
+                order: Hoek.reach(routeOptions, "order") || null,
+                deprecated: Hoek.reach(routeOptions, "deprecated") || null,
+                id: Hoek.reach(routeOptions, "id") || null,
+                groups: route.group
             };
 
-
             Utilities.assignVendorExtensions(routeData, routeOptions);
-            routeData.path = Utilities.replaceInPath(routeData.path, ['endpoints'], this.settings.pathReplacements);
-
+            routeData.path = Utilities.replaceInPath(routeData.path, ["endpoints"], this.settings.pathReplacements);
 
             // user configured interface through route plugin options
-            if (Hoek.reach(routeOptions, 'validate.query')) {
-                routeData.queryParams = Utilities.toJoiObject(Hoek.reach(routeOptions, 'validate.query'));
+            if (Hoek.reach(routeOptions, "validate.query")) {
+                routeData.queryParams = Utilities.toJoiObject(Hoek.reach(routeOptions, "validate.query"));
             }
-            if (Hoek.reach(routeOptions, 'validate.params')) {
-                routeData.pathParams = Utilities.toJoiObject(Hoek.reach(routeOptions, 'validate.params'));
+            if (Hoek.reach(routeOptions, "validate.params")) {
+                routeData.pathParams = Utilities.toJoiObject(Hoek.reach(routeOptions, "validate.params"));
             }
-            if (Hoek.reach(routeOptions, 'validate.headers')) {
-                routeData.headerParams = Utilities.toJoiObject(Hoek.reach(routeOptions, 'validate.headers'));
+            if (Hoek.reach(routeOptions, "validate.headers")) {
+                routeData.headerParams = Utilities.toJoiObject(Hoek.reach(routeOptions, "validate.headers"));
             }
-            if (Hoek.reach(routeOptions, 'validate.payload')) {
+            if (Hoek.reach(routeOptions, "validate.payload")) {
                 // has different structure, just pass straight through
-                routeData.payloadParams = Hoek.reach(routeOptions, 'validate.payload');
+                routeData.payloadParams = Hoek.reach(routeOptions, "validate.payload");
                 // if its a native javascript object convert it to JOI
                 if (!routeData.payloadParams.isJoi) {
                     routeData.payloadParams = Joi.object(routeData.payloadParams);
@@ -105,33 +109,36 @@ export default class Paths {
             }
 
             // swap out any custom validation function for Joi object/string
-            [
-                'queryParams',
-                'pathParams',
-                'headerParams',
-                'payloadParams'
-            ].forEach((property) => {
+            ["queryParams", "pathParams", "headerParams", "payloadParams"].forEach(property => {
                 // swap out any custom validation function for Joi object/string
                 if (Utilities.isFunction(routeData[property])) {
-                    if (property !== 'pathParams') {
-                        this.settings.log(['validation', 'warning'], 'Using a Joi.function for a query, header or payload is not supported.');
-                        
-                        if (property === 'payloadParams') {
-                            routeData[property] = Joi.object().label('Hidden Model');
+                    if (property !== "pathParams") {
+                        this.settings.log(
+                            ["validation", "warning"],
+                            "Using a Joi.function for a query, header or payload is not supported."
+                        );
+
+                        if (property === "payloadParams") {
+                            routeData[property] = Joi.object().label("Hidden Model");
                         } else {
-                            routeData[property] = Joi.object({ 'Hidden Model': Joi.string() });
+                            routeData[property] = Joi.object({
+                                "Hidden Model": Joi.string()
+                            });
                         }
                     } else {
-                        this.settings.log(['validation', 'error'], 'Using a Joi.function for a params is not supported and has been removed.');
+                        this.settings.log(
+                            ["validation", "error"],
+                            "Using a Joi.function for a params is not supported and has been removed."
+                        );
                         routeData[property] = null;
                     }
                 }
             });
 
             // hapi wildcard method support
-            if (routeData.method === '*') {
+            if (routeData.method === "*") {
                 // OPTIONS not supported by Swagger and HEAD not support by HAPI
-                ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].forEach((method) => {
+                ["GET", "POST", "PUT", "PATCH", "DELETE"].forEach(method => {
                     const newRoute = Hoek.clone(routeData);
 
                     newRoute.method = method.toUpperCase();
@@ -141,7 +148,6 @@ export default class Paths {
                 routesData.push(routeData);
             }
         });
-
 
         return this.buildRoutes(routesData);
     }
@@ -153,79 +159,81 @@ export default class Paths {
      * @param  {Object} routes
      * @return {Object}
      */
-    buildRoutes (routes) {
-
-        let self = this;
-        let pathObj = {};
-        let swagger = {
-            'definitions': {},
-            'x-alt-definitions': {},
+    public buildRoutes(routes) {
+        const pathObj = {};
+        const swagger = {
+            definitions: {},
+            "x-alt-definitions": {},
             paths: pathObj
         };
-        let definitionCache = [
-            new WeakMap(),
-            new WeakMap()
-        ];
+        const definitionCache = [new WeakMap(), new WeakMap()];
 
         // reset properties
-        this.properties = new Properties(this.settings, swagger.definitions, swagger['x-alt-definitions'], definitionCache);
-        this.responses = new Responses(this.settings, swagger.definitions, swagger['x-alt-definitions'], definitionCache);
+        this.properties = new Properties(
+            this.settings,
+            swagger.definitions,
+            swagger["x-alt-definitions"],
+            definitionCache
+        );
+        this.responses = new Responses(
+            this.settings,
+            swagger.definitions,
+            swagger["x-alt-definitions"],
+            definitionCache
+        );
 
-        routes.forEach((route) => {
-
-            let method = route.method;
+        routes.forEach(route => {
+            const method = route.method;
             let path = this.removeBasePath(route.path, this.settings.basePath, this.settings.pathReplacements);
-            let out = {
-                'summary': route.description,
-                'operationId': route.id || Utilities.createId(route.method, path),
-                'description': route.notes,
-                'parameters': [],
-                'consumes': [],
-                'produces': [],
-                'tags': undefined,
-                'security': undefined,
+            const out = {
+                summary: route.description,
+                operationId: route.id || Utilities.createId(route.method, path),
+                description: route.notes,
+                parameters: [],
+                consumes: [],
+                produces: [],
+                tags: undefined,
+                security: undefined,
                 responses: undefined,
                 deprecated: undefined
             };
 
             // tags in swagger are used for grouping
-            if (this.settings.grouping === 'tags') {
+            if (this.settings.grouping === "tags") {
                 out.tags = route.tags.filter(this.settings.tagsGroupingFilter);
-            }
-            else {
+            } else {
                 out.tags = route.groups;
             }
 
-            out.description = Array.isArray(route.notes) ? route.notes.join('<br/><br/>') : route.notes;
+            out.description = Array.isArray(route.notes) ? route.notes.join("<br/><br/>") : route.notes;
 
             if (route.security) {
                 out.security = route.security;
             }
 
             // set from plugin options or from route options
-            let payloadType = this.overload(this.settings.payloadType, route.payloadType);
+            const payloadType = this.overload(this.settings.payloadType, route.payloadType);
 
             // build payload either with JSON or form input
             let payloadStructures = Paths.getDefaultStructures();
-            let payloadJoi = this.getJOIObj(route, 'payloadParams');
-            if (payloadType.toLowerCase() === 'json') {
+            const payloadJoi = this.getJOIObj(route, "payloadParams");
+            if (payloadType.toLowerCase() === "json") {
                 // set as json
-                payloadStructures = this.getSwaggerStructures(payloadJoi, 'body', true, false);
+                payloadStructures = this.getSwaggerStructures(payloadJoi, "body", true, false);
             } else {
                 // set as formData
                 if (Utilities.hasJoiChildren(payloadJoi)) {
-                    payloadStructures = this.getSwaggerStructures(payloadJoi, 'formData', false, false);
+                    payloadStructures = this.getSwaggerStructures(payloadJoi, "formData", false, false);
                 } else {
-                    self.testParameterError(payloadJoi, 'payload form-urlencoded', path);
+                    this.testParameterError(payloadJoi, "payload form-urlencoded", path);
                 }
                 // add form data mimetype
-                out.consumes = ['application/x-www-form-urlencoded'];
+                out.consumes = ["application/x-www-form-urlencoded"];
             }
-
 
             // change form mimetype based on meta property 'swaggerType'
             if (this.hasFileType(route)) {
-                out.consumes = ['multipart/form-data'];
+                out.consumes = ["multipart/form-data"];
             }
 
             // add user defined over automaticlly discovered
@@ -237,21 +245,19 @@ export default class Paths {
                 out.produces = this.overload(this.settings.produces, route.produces);
             }
 
-
             // set required true/false for each path params
-            //var pathParams = this.properties.toParameters (this.getJOIObj(route, 'pathParams'), 'path', false);
+            // var pathParams = this.properties.toParameters (this.getJOIObj(route, 'pathParams'), 'path', false);
             let pathStructures = Paths.getDefaultStructures();
-            let pathJoi = this.getJOIObj(route, 'pathParams');
+            const pathJoi = this.getJOIObj(route, "pathParams");
             if (Utilities.hasJoiChildren(pathJoi)) {
-                pathStructures = this.getSwaggerStructures(pathJoi, 'path', false, false);
-                pathStructures.parameters.forEach(function (item) {
-
+                pathStructures = this.getSwaggerStructures(pathJoi, "path", false, false);
+                pathStructures.parameters.forEach(item => {
                     // add required based on path pattern {prama} and {prama?}
                     if (item.required === undefined) {
-                        if (path.indexOf('{' + item.name + '}') > -1) {
+                        if (path.indexOf("{" + item.name + "}") > -1) {
                             item.required = true;
                         }
-                        if (path.indexOf('{' + item.name + '?}') > -1) {
+                        if (path.indexOf("{" + item.name + "?}") > -1) {
                             delete item.required;
                         }
                     }
@@ -259,30 +265,35 @@ export default class Paths {
                         delete item.required;
                     }
                     if (!item.required) {
-                        self.settings.log(['validation', 'warning'], 'The ' + path + ' params parameter {' + item.name + '} is set as optional. This will work in the UI, but is invalid in the swagger spec');
+                        this.settings.log(
+                            ["validation", "warning"],
+                            "The " +
+                                path +
+                                " params parameter {" +
+                                item.name +
+                                "} is set as optional. This will work in the UI, but is invalid in the swagger spec"
+                        );
                     }
-
                 });
             } else {
-                self.testParameterError(pathJoi, 'params', path);
+                this.testParameterError(pathJoi, "params", path);
             }
 
             // removes ? from {prama?} after we have set required/optional for path params
             path = this.cleanPathParameters(path);
 
-            //let headerParams = this.properties.toParameters (this.getJOIObj(route, 'headerParams'), 'header', false);
+            // let headerParams = this.properties.toParameters (this.getJOIObj(route, 'headerParams'), 'header', false);
             let headerStructures = Paths.getDefaultStructures();
-            let headerJoi = this.getJOIObj(route, 'headerParams');
+            const headerJoi = this.getJOIObj(route, "headerParams");
             if (Utilities.hasJoiChildren(headerJoi)) {
-                headerStructures = this.getSwaggerStructures(headerJoi, 'header', false, false);
+                headerStructures = this.getSwaggerStructures(headerJoi, "header", false, false);
             } else {
-                self.testParameterError(headerJoi, 'headers', path);
+                this.testParameterError(headerJoi, "headers", path);
             }
             // if the API has a user set accept header with a enum convert into the produces array
             if (this.settings.acceptToProduce === true) {
-                headerStructures.parameters = headerStructures.parameters.filter(function (header) {
-
-                    if (header.name.toLowerCase() === 'accept') {
+                headerStructures.parameters = headerStructures.parameters.filter(header => {
+                    if (header.name.toLowerCase() === "accept") {
                         if (header.enum) {
                             out.produces = Utilities.sortFirstItem(header.enum, header.default);
                             return false;
@@ -292,15 +303,13 @@ export default class Paths {
                 });
             }
 
-
             let queryStructures = Paths.getDefaultStructures();
-            let queryJoi = this.getJOIObj(route, 'queryParams');
+            const queryJoi = this.getJOIObj(route, "queryParams");
             if (Utilities.hasJoiChildren(queryJoi)) {
-                queryStructures = this.getSwaggerStructures(queryJoi, 'query', false, false);
+                queryStructures = this.getSwaggerStructures(queryJoi, "query", false, false);
             } else {
-                self.testParameterError(queryJoi, 'query', path);
+                this.testParameterError(queryJoi, "query", path);
             }
-
 
             out.parameters = out.parameters.concat(
                 headerStructures.parameters,
@@ -309,14 +318,13 @@ export default class Paths {
                 payloadStructures.parameters
             );
 
-
             // if the api sets the content-type header pramater use that
             if (this.hasContentTypeHeader(out)) {
                 delete out.consumes;
             }
 
-            //let name = out.operationId + method;
-            //userDefindedSchemas, defaultSchema, statusSchemas, useDefinitions, isAlt
+            // let name = out.operationId + method;
+            // userDefindedSchemas, defaultSchema, statusSchemas, useDefinitions, isAlt
             out.responses = this.responses.build(
                 route.responses,
                 route.responseSchema,
@@ -325,9 +333,8 @@ export default class Paths {
                 false
             );
 
-
             if (route.order) {
-                out['x-order'] = route.order;
+                out["x-order"] = route.order;
             }
 
             Utilities.assignVendorExtensions(out, route);
@@ -353,9 +360,8 @@ export default class Paths {
      * @param  {String} name
      * @return {Object}
      */
-    getJOIObj (route, name) {
-
-        let prama = route[name];
+    public getJOIObj(route, name) {
+        const prama = route[name];
         //  if (Utilities.hasJoiChildren(route[name])) {
         //      prama = route[name]._inner.children;
         //  }
@@ -369,9 +375,8 @@ export default class Paths {
      * @param  {Object} priority
      * @return {Object}
      */
-    overload (base, priority) {
-
-        return (priority) ? priority : base;
+    public overload(base, priority) {
+        return priority ? priority : base;
     }
 
     /**
@@ -380,12 +385,12 @@ export default class Paths {
      * @param  {Object} route
      * @return {Boolean}
      */
-    hasFileType (route) {
+    public hasFileType(route) {
         const routeString = JSON.stringify(route, (key, value) => {
             // _currentJoi is a circular reference, introduced in Joi v11.0.0
-            return key === '_currentJoi' ? undefined : value;
+            return key === "_currentJoi" ? undefined : value;
         });
-        return routeString.indexOf('swaggerType') > -1;
+        return routeString.indexOf("swaggerType") > -1;
     }
 
     /**
@@ -394,11 +399,9 @@ export default class Paths {
      * @param  {String} path
      * @return {String}
      */
-    cleanPathParameters (path) {
-
-        return path.replace('?}', '}');
-    };
-
+    public cleanPathParameters(path) {
+        return path.replace("?}", "}");
+    }
     /**
      * remove the base path from endpoint
      *
@@ -407,11 +410,10 @@ export default class Paths {
      * @param  {Array} pathReplacements
      * @return {String}
      */
-    removeBasePath (path, basePath, pathReplacements) {
-
-        if (basePath !== '/' && Utilities.startsWith(path, basePath)) {
-            path = path.replace(basePath, '');
-            path = Utilities.replaceInPath(path, ['endpoints'], pathReplacements);
+    public removeBasePath(path, basePath, pathReplacements) {
+        if (basePath !== "/" && Utilities.startsWith(path, basePath)) {
+            path = path.replace(basePath, "");
+            path = Utilities.replaceInPath(path, ["endpoints"], pathReplacements);
         }
         return path;
     }
@@ -422,12 +424,10 @@ export default class Paths {
      * @param  {String} path
      * @return {boolean}
      */
-    hasContentTypeHeader (path) {
-
+    public hasContentTypeHeader(path) {
         let out = false;
-        path.parameters.forEach(function (prama) {
-
-            if (prama.in === 'header' && prama.name.toLowerCase() === 'content-type') {
+        path.parameters.forEach(prama => {
+            if (prama.in === "header" && prama.name.toLowerCase() === "content-type") {
                 out = true;
             }
         });
@@ -443,8 +443,7 @@ export default class Paths {
      * @param  {Boolean} isAlt
      * @return {Object}
      */
-    getSwaggerStructures (joiObj, parameterType, useDefinitions, isAlt) {
-
+    public getSwaggerStructures(joiObj, parameterType, useDefinitions, isAlt) {
         let outProperties;
         let outParameters;
 
@@ -453,26 +452,23 @@ export default class Paths {
             outProperties = this.properties.parseProperty(null, joiObj, null, parameterType, useDefinitions, isAlt);
             outParameters = Parameters.fromProperties(outProperties, parameterType);
         }
-        let out = {
+        const out = {
             properties: outProperties || {},
             parameters: outParameters || []
         };
         return out;
     }
 
-    static getDefaultStructures () {
-
-        return {
-            'properties': {},
-            'parameters': []
-        };
-    };
-    
-    
-    testParameterError (joiObj, parameterType, path) {
-    
+    public testParameterError(joiObj, parameterType, path) {
         if (joiObj && !Utilities.hasJoiChildren(joiObj)) {
-            this.settings.log(['validation', 'error'], 'The ' + path  + ' route ' + parameterType + ' parameter was set, but not as a Joi.object() with child properties');
+            this.settings.log(
+                ["validation", "error"],
+                "The " +
+                    path +
+                    " route " +
+                    parameterType +
+                    " parameter was set, but not as a Joi.object() with child properties"
+            );
         }
-    };
+    }
 }

@@ -1,20 +1,20 @@
-import Hoek from 'hoek';
-import * as Joi from "joi";
-import $RefParser from 'json-schema-ref-parser';
-import * as Filter from './filter';
-import * as Group from './group';
-import * as Sort from './sort';
-import * as Info from './info';
-import Paths from './paths';
-import * as Tags from './tags';
-import * as Validate from './validate';
-import * as Utilities from './utilities';
 import * as Hapi from "hapi";
-import { IPluginOptions, MimeTypes } from './defaults';
+import Hoek from "hoek";
+import * as Joi from "joi";
+import $RefParser from "json-schema-ref-parser";
+import { IPluginOptions, MimeTypes } from "./defaults";
+import * as Filter from "./filter";
+import * as Group from "./group";
+import * as Info from "./info";
+import Paths from "./paths";
+import * as Sort from "./sort";
+import * as Tags from "./tags";
+import * as Utilities from "./utilities";
+import * as Validate from "./validate";
 
-export type SwaggerSchemes = 'http'|'https'|'ws'|'wss';
-export interface ISwagger2Schema extends Partial<ISwaggerDocument>{
-    swagger: '2.0';
+export type SwaggerSchemes = "http" | "https" | "ws" | "wss";
+export interface ISwagger2Schema extends Partial<ISwaggerDocument> {
+    swagger: "2.0";
 }
 
 export interface ISwaggerDocument {
@@ -31,41 +31,43 @@ export interface ISwaggerDocument {
     responses: any;
     securityDefinitions: any;
     security: any;
-    grouping: 'path'|'tags'
-    tagsGroupingFilter: Function;
+    grouping: "path" | "tags";
+    tagsGroupingFilter: (tag: string) => boolean;
     tags: any;
     cors: boolean;
-    externalDocs: { description: string, url: string},
+    externalDocs: { description: string; url: string };
     cache: {
-        expiresIn: number,
-        expiresAt: string,
-        generateTimeout: number
-    }
+        expiresIn: number;
+        expiresAt: string;
+        generateTimeout: number;
+    };
 }
 
 /**
  * default data for swagger root object
  */
 const data: ISwagger2Schema = {
-    swagger: '2.0',
-    host: 'localhost',
-    basePath: '/'
-}
+    swagger: "2.0",
+    host: "localhost",
+    basePath: "/"
+};
 
 export default data;
 
-type SwaggerSchema = {[K in keyof ISwagger2Schema]};
+type SwaggerSchema = { [K in keyof ISwagger2Schema]: Joi.Schema };
 
 /**
  * schema for swagger root object
  */
 export const swaggerSchema: SwaggerSchema = {
-    swagger: Joi.string().valid('2.0').required(),
+    swagger: Joi.string()
+        .valid("2.0")
+        .required(),
     info: Joi.any(),
     host: Joi.string(), // JOI hostname validator too strict
     basePath: Joi.string().regex(/^\//),
     schemes: Joi.array()
-        .items(Joi.string().valid(['http', 'https', 'ws', 'wss']))
+        .items(Joi.string().valid(["http", "https", "ws", "wss"]))
         .optional(),
     consumes: Joi.array().items(Joi.string()),
     produces: Joi.array().items(Joi.string()),
@@ -75,7 +77,7 @@ export const swaggerSchema: SwaggerSchema = {
     responses: Joi.any(),
     securityDefinitions: Joi.any(),
     security: Joi.any(),
-    grouping: Joi.string().valid(['path', 'tags']),
+    grouping: Joi.string().valid(["path", "tags"]),
     tagsGroupingFilter: Joi.func(),
     tags: Joi.any(),
     cors: Joi.boolean(),
@@ -98,7 +100,7 @@ export const schema = Joi.object(swaggerSchema).pattern(/^x-/, Joi.any());
  * @param settings
  * @param request
  */
-export async function getSwaggerJSON (settings, request: Hapi.Request) {
+export async function getSwaggerJSON(settings, request: Hapi.Request) {
     // remove items that cannot be changed by user
     delete settings.swagger;
 
@@ -107,7 +109,7 @@ export async function getSwaggerJSON (settings, request: Hapi.Request) {
     data.schemes = [getSchema(request)];
 
     settings = Hoek.applyToDefaults(data, settings);
-    if (settings.basePath && settings.basePath !== '/') {
+    if (settings.basePath && settings.basePath !== "/") {
         settings.basePath = Utilities.removeTrailingSlash(settings.basePath);
     }
     let out = removeNoneSchemaOptions(settings);
@@ -118,29 +120,26 @@ export async function getSwaggerJSON (settings, request: Hapi.Request) {
 
     let routes = request.server.table();
 
-    routes = Filter.byTags(['api'], routes);
+    routes = Filter.byTags(["api"], routes);
     Sort.paths(settings.sortPaths, routes);
 
     // filter routes displayed based on tags passed in query string
-    if (Utilities.isObject(request.query) && (request.query as any).tags) { // for some reason type gaurd didn't work
-        let filterTags = (request.query as any).tags.split(',');
+    if (Utilities.isObject(request.query) && (request.query as any).tags) {
+        // for some reason type gaurd didn't work
+        const filterTags = (request.query as any).tags.split(",");
         routes = Filter.byTags(filterTags, routes);
     }
 
     // append group property - by path
-    Group.appendGroupByPath(
-        settings.pathPrefixSize,
-        settings.basePath,
-        routes,
-        settings.pathReplacements
-    );
+    Group.appendGroupByPath(settings.pathPrefixSize, settings.basePath, routes, settings.pathReplacements);
 
-    let paths = new Paths(settings);
-    let pathData = paths.build(routes);
+    const paths = new Paths(settings);
+
+    const pathData = paths.build(routes);
     out.paths = pathData.paths;
     out.definitions = pathData.definitions;
-    if (Utilities.hasProperties(pathData['x-alt-definitions'])) {
-        out['x-alt-definitions'] = pathData['x-alt-definitions'];
+    if (Utilities.hasProperties(pathData["x-alt-definitions"])) {
+        out["x-alt-definitions"] = pathData["x-alt-definitions"];
     }
     out = removeNoneSchemaOptions(out);
 
@@ -153,7 +152,7 @@ export async function getSwaggerJSON (settings, request: Hapi.Request) {
     } else {
         return out;
     }
-};
+}
 
 /**
  * dereference a schema
@@ -161,21 +160,20 @@ export async function getSwaggerJSON (settings, request: Hapi.Request) {
  * @param  {Object} schema
  * @param  {Function} callback
  */
-export async function dereference (schema) {
+export async function dereference(schema) {
     const parser = new $RefParser(); // Typings for $RefParser static methods are incorrect
 
     try {
         const json = await parser.dereference(schema);
 
         delete json.definitions;
-        delete json['x-alt-definitions'];
+        delete json["x-alt-definitions"];
 
         return json;
-
-    } catch(err) {
-        throw new Error('failed to dereference schema');
+    } catch (err) {
+        throw new Error("failed to dereference schema");
     }
-};
+}
 
 /**
  * finds the current host
@@ -183,30 +181,28 @@ export async function dereference (schema) {
  * @param  {Object} request
  * @return {String}
  */
-function getHost (request) {
-    const proxyHost = request.headers['x-forwarded-host'] || request.headers['disguised-host'] || '';
+function getHost(request) {
+    const proxyHost = request.headers["x-forwarded-host"] || request.headers["disguised-host"] || "";
+
     if (proxyHost) {
         return proxyHost;
     }
 
-    const reqHost = request.info.host.split(':');
+    const reqHost = request.info.host.split(":");
     const host = reqHost[0];
-    const port = parseInt(reqHost[1] || '', 10);
+    const port = parseInt(reqHost[1] || "", 10);
     const protocol = request.server.info.protocol;
 
     // do not set port if its protocol http/https with default post numbers
     // this cannot be tested on most desktops as ports below 1024 throw EACCES
     /* $lab:coverage:off$ */
-    if (!isNaN(port) &&
-        ((protocol === 'http' && port !== 80) ||
-        (protocol === 'https' && port !== 443))
-    ) {
-        return host + ':' + port;
+    if (!isNaN(port) && ((protocol === "http" && port !== 80) || (protocol === "https" && port !== 443))) {
+        return host + ":" + port;
     }
     /* $lab:coverage:on$ */
 
     return host;
-};
+}
 
 /**
  * finds the current schema
@@ -215,28 +211,28 @@ function getHost (request) {
  * @param  {Object} connection
  * @return {String}
  */
-function getSchema (request) {
-    const forwardedProtocol = request.headers['x-forwarded-proto'];
+function getSchema(request) {
+    const forwardedProtocol = request.headers["x-forwarded-proto"];
 
     if (forwardedProtocol) {
         return forwardedProtocol;
     }
 
     // Azure Web Sites adds this header when requests was received via HTTPS.
-    if (request.headers['x-arr-ssl']) {
-        return 'https';
+    if (request.headers["x-arr-ssl"]) {
+        return "https";
     }
 
     const protocol = request.server.info.protocol;
 
     // When iisnode is used, connection protocol is `socket`. While IIS
     // receives request over HTTP and passes it to node via a named pipe.
-    if (protocol === 'socket') {
-        return 'http';
+    if (protocol === "socket") {
+        return "http";
     }
 
     return protocol;
-};
+}
 
 /**
  * removes none schema properties from options
@@ -245,39 +241,39 @@ function getSchema (request) {
  * @return {Object}
  */
 function removeNoneSchemaOptions(options) {
-    let out = Hoek.clone(options);
+    const out = Hoek.clone(options);
     [
-        'debug',
-        'documentationPath',
-        'documentationRouteTags',
-        'documentationPage',
-        'jsonPath',
-        'auth',
-        'swaggerUIPath',
-        'swaggerUI',
-        'pathPrefixSize',
-        'payloadType',
-        'expanded',
-        'lang',
-        'sortTags',
-        'sortEndpoints',
-        'sortPaths',
-        'grouping',
-        'tagsGroupingFilter',
-        'xProperties',
-        'reuseDefinitions',
-        'uiCompleteScript',
-        'deReference',
-        'definitionPrefix',
-        'validatorUrl',
-        'jsonEditor',
-        'acceptToProduce',
-        'cache',
-        'pathReplacements',
-        'log',
-        'cors'
+        "debug",
+        "documentationPath",
+        "documentationRouteTags",
+        "documentationPage",
+        "jsonPath",
+        "auth",
+        "swaggerUIPath",
+        "swaggerUI",
+        "pathPrefixSize",
+        "payloadType",
+        "expanded",
+        "lang",
+        "sortTags",
+        "sortEndpoints",
+        "sortPaths",
+        "grouping",
+        "tagsGroupingFilter",
+        "xProperties",
+        "reuseDefinitions",
+        "uiCompleteScript",
+        "deReference",
+        "definitionPrefix",
+        "validatorUrl",
+        "jsonEditor",
+        "acceptToProduce",
+        "cache",
+        "pathReplacements",
+        "log",
+        "cors"
     ].forEach(element => {
         delete out[element];
     });
     return out;
-};
+}

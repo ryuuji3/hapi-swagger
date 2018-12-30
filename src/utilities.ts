@@ -1,149 +1,137 @@
-import Hoek from 'hoek';
-import Joi, { JoiObject } from 'joi';
+import Hoek from "hoek";
+import Joi, { JoiObject } from "joi";
 
+// tslint:disable ban-types
 
 /**
-	* is passed item an object
-	*
-	* @param  {unknown} obj
-	* @return {Boolean}
-	*/
-export function isObject (obj: Object): obj is Object {
-
-    return obj !== null && obj !== undefined && typeof obj === 'object' && !Array.isArray(obj);
+ * is passed item an object
+ *
+ * @param  {unknown} obj
+ * @return {Boolean}
+ */
+export function isObject(obj: unknown): obj is object {
+    return obj !== null && obj !== undefined && typeof obj === "object" && !Array.isArray(obj);
 }
 
-
 /**
-     * is passed item a function
-     *
-     * @param  {Object} obj
-     * @return {Boolean}
-     */
-export function isFunction (obj: Function): obj is Function {
-
+ * is passed item a function
+ *
+ * @param  {Object} obj
+ * @return {Boolean}
+ */
+export function isFunction(obj: unknown): obj is Function {
     // remove `obj.constructor` test as it was always true
-    return !!(obj && obj.call && obj.apply);
+    return !!(obj && (obj as Function).call && (obj as Function).apply);
 }
 
-
 /**
-     * is passed item a regex
-     *
-     * @param  {Object} obj
-     * @return {Boolean}
-     */
-export function isRegex(obj: Object): obj is RegExp {
-
+ * is passed item a regex
+ *
+ * @param  {Object} obj
+ * @return {Boolean}
+ */
+export function isRegex(obj: unknown): obj is RegExp {
     // base on https://github.com/ljharb/is-regex/
     // has a couple of edge use cases for different env  - hence coverage:off
     /* $lab:coverage:off$ */
 
     const regexExec = RegExp.prototype.exec;
-    const tryRegexExec = function tryRegexExec (value: string) {
-
+    const tryRegexExec = function tryRegexExec(value: unknown) {
         try {
-            regexExec.call(null, value);
+            regexExec.call(value);
             return true;
         } catch (e) {
             return false;
         }
     };
     const toStr = Object.prototype.toString;
-    const regexClass = '[object RegExp]';
-    const hasToStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
+    const regexClass = "[object RegExp]";
+    const hasToStringTag = typeof Symbol === "function" && typeof Symbol.toStringTag === "symbol";
 
-    if (typeof obj !== 'object') {
+    if (typeof obj !== "object") {
         return false;
     }
-    return hasToStringTag ? tryRegexExec(obj.toString()) : toStr.call(obj) === regexClass;
+    return hasToStringTag ? tryRegexExec(obj) : toStr.call(obj) === regexClass;
     /* $lab:coverage:on$ */
 }
 
-
 /**
-	* does string start with test, temp before native support
-	*
-	* @param  {String} str
-    * @param  {String} test
-	* @return {Boolean}
-	*/
-export function startsWith (str: string, test: string): boolean {
-    return (str.indexOf(test) === 0);
+ * does string start with test, temp before native support
+ *
+ * @param  {String} str
+ * @param  {String} test
+ * @return {Boolean}
+ */
+export function startsWith(str: string, test: string): boolean {
+    return str.indexOf(test) === 0;
 }
 
-
 /**
-	* does an object have any of its own properties
-	*
-	* @param  {Object} obj
-	* @return {Boolean}
-	*/
-export function hasProperties (obj: object): boolean {
-    for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            return true;
-        }
+ * does an object have any of its own properties
+ *
+ * @param  {Object} obj
+ * @return {Boolean}
+ */
+export function hasProperties(obj: object): boolean {
+    for (const key in obj) {
+        // tslint:disable-next-line forin
+        return obj.hasOwnProperty(key);
     }
     return false;
 }
 
-
 /**
-	* deletes any property in an object that is undefined, null or an empty array
-	*
-	* @param  {Object} obj
-	* @return {Object}
-	*/
-export function deleteEmptyProperties (obj: { [key: string]: any}): object {
-    Object.getOwnPropertyNames(obj).forEach(key => {
-        // delete properties undefined values
-        if (obj[key] === undefined || obj[key] === null) {
-            delete obj[key];
-        }
-        // allow blank objects for example or default properties
-        if (['default', 'example', 'security'].indexOf(key) === -1) {
-            // delete array with no values
-            if (Array.isArray(obj[key]) && obj[key].length === 0) {
+ * deletes any property in an object that is undefined, null or an empty array
+ *
+ * @param  {Object} obj
+ * @return {Object}
+ */
+export function deleteEmptyProperties(obj: { [key: string]: any }): object {
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            // delete properties undefined values
+            if (obj[key] === undefined || obj[key] === null) {
                 delete obj[key];
             }
-            // delete object which does not have its own properties
-            if (isObject(obj[key]) && hasProperties(obj[key]) === false) {
-                delete obj[key];
+            // allow blank objects for example or default properties
+            if (["default", "example", "security"].indexOf(key) === -1) {
+                // delete array with no values
+                if (Array.isArray(obj[key]) && obj[key].length === 0) {
+                    delete obj[key];
+                }
+                // delete object which does not have its own properties
+                if (isObject(obj[key]) && hasProperties(obj[key]) === false) {
+                    delete obj[key];
+                }
             }
         }
-    });
+    }
 
     return obj;
 }
 
-
 /**
-    * gets first item of an array
-    *
-    * @param  {Array} array
-    * @return {Object}
-    */
-export function first (array: Array<any>): any {
-
+ * gets first item of an array
+ *
+ * @param  {Array} array
+ * @return {Object}
+ */
+export function first(array: any[]): any {
     return Array.isArray(array) ? array[0] : undefined;
 }
 
-
 /**
-    * sort array so it has a set firstItem
-    *
-    * @param  {Array} array
-    * @param  {object} firstItem
-    * @return {Array}
-    */
-export function sortFirstItem (array: Array<any>, firstItem: object): Array<any> {
-
+ * sort array so it has a set firstItem
+ *
+ * @param  {Array} array
+ * @param  {object} firstItem
+ * @return {Array}
+ */
+export function sortFirstItem(array: any[], firstItem: object): any[] {
     let out = array;
     if (firstItem) {
         out = [firstItem];
-        array.forEach(function (item) {
-
+        array.forEach(item => {
             if (item !== firstItem) {
                 out.push(item);
             }
@@ -152,17 +140,15 @@ export function sortFirstItem (array: Array<any>, firstItem: object): Array<any>
     return out;
 }
 
-
 /**
-    * replace a value in an array - does not keep order
-    *
-    * @param  {Array} array
-    * @param  {object} current
-    * @param  {object} replacement
-    * @return {Array}
-    */
-export function replaceValue (array: Array<any>, current: object, replacement: object): Array<any> {
-
+ * replace a value in an array - does not keep order
+ *
+ * @param  {Array} array
+ * @param  {object} current
+ * @param  {object} replacement
+ * @return {Array}
+ */
+export function replaceValue(array: any[], current: any, replacement: any): any[] {
     if (array && current && replacement) {
         array = Hoek.clone(array);
         if (array.indexOf(current) > -1) {
@@ -173,7 +159,6 @@ export function replaceValue (array: Array<any>, current: object, replacement: o
     return array;
 }
 
-
 /**
  * does an object have a key
  *
@@ -181,11 +166,10 @@ export function replaceValue (array: Array<any>, current: object, replacement: o
  * @param  {String} findKey
  * @return {Boolean}
  */
-export function hasKey (obj: { [key: string]: any}, findKey: string): boolean {
-
-    for (var key in obj) {
+export function hasKey(obj: { [key: string]: any }, findKey: string): boolean {
+    for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-            if (typeof obj[key] === 'object') {
+            if (typeof obj[key] === "object") {
                 if (hasKey(obj[key], findKey) === true) {
                     return true;
                 }
@@ -198,7 +182,6 @@ export function hasKey (obj: { [key: string]: any}, findKey: string): boolean {
     return false;
 }
 
-
 /**
  * find and rename key in an object
  *
@@ -207,11 +190,10 @@ export function hasKey (obj: { [key: string]: any}, findKey: string): boolean {
  * @param  {String} replaceKey
  * @return {Object}
  */
-export function findAndRenameKey (obj: { [key: string]: any}, findKey: string, replaceKey: string): object {
-
-    for (var key in obj) {
+export function findAndRenameKey(obj: { [key: string]: any }, findKey: string, replaceKey: string): object {
+    for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-            if (typeof obj[key] === 'object') {
+            if (typeof obj[key] === "object") {
                 findAndRenameKey(obj[key], findKey, replaceKey);
             }
             if (key === findKey) {
@@ -225,29 +207,24 @@ export function findAndRenameKey (obj: { [key: string]: any}, findKey: string, r
     return obj;
 }
 
-
-
 /**
-	* remove any properties in an object that are not in the list or do not start with 'x-'
-	*
-	* @param  {Object} obj
-    * @param  {Array} listOfProps
-
-	* @return {Object}
-	*/
-export function removeProps (obj: { [key: string]: any}, listOfProps: Array<any>): object {
-
-    for (let key in obj) {
+ * remove any properties in an object that are not in the list or do not start with 'x-'
+ *
+ * @param  {Object} obj
+ * @param  {Array} listOfProps
+ * @return {Object}
+ */
+export function removeProps(obj: { [key: string]: any }, listOfProps: any[]): object {
+    for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-            if (listOfProps.indexOf(key) === -1 && startsWith(key, 'x-') === false) {
+            if (listOfProps.indexOf(key) === -1 && startsWith(key, "x-") === false) {
                 delete obj[key];
-                //console.log('Removed property: ' + key + ' from object: ', JSON.stringify(obj));
+                // console.log('Removed property: ' + key + ' from object: ', JSON.stringify(obj));
             }
         }
     }
     return obj;
-};
-
+}
 
 /**
  * is a Joi object
@@ -255,10 +232,9 @@ export function removeProps (obj: { [key: string]: any}, listOfProps: Array<any>
  * @param  {Object} joiObj
  * @return {Boolean}
  */
-export function isJoi (joiObj: JoiObject): joiObj is JoiObject {
-    return (joiObj && joiObj.isJoi) ? true : false;
-};
-
+export function isJoi(joiObj: unknown): joiObj is JoiObject {
+    return joiObj && (joiObj as JoiObject).isJoi ? true : false;
+}
 
 /**
  * does JOI object have children
@@ -266,11 +242,9 @@ export function isJoi (joiObj: JoiObject): joiObj is JoiObject {
  * @param  {Object} joiObj
  * @return {Boolean}
  */
-export function hasJoiChildren (joiObj: any): boolean {
-
-    return (isJoi(joiObj) && Hoek.reach(joiObj, '_inner.children')) ? true : false;
-};
-
+export function hasJoiChildren(joiObj: any): boolean {
+    return isJoi(joiObj) && Hoek.reach(joiObj, "_inner.children") ? true : false;
+}
 
 /**
  * checks if object has meta array
@@ -278,11 +252,9 @@ export function hasJoiChildren (joiObj: any): boolean {
  * @param  {Object} joiObj
  * @return {Boolean}
  */
-export function hasJoiMeta (joiObj: any): boolean {
-
-    return (isJoi(joiObj) && Array.isArray((joiObj as any)._meta)) ? true : false;
+export function hasJoiMeta(joiObj: any): boolean {
+    return isJoi(joiObj) && Array.isArray((joiObj as any)._meta) ? true : false;
 }
-
 
 /**
  * get meta property value from JOI object
@@ -290,11 +262,9 @@ export function hasJoiMeta (joiObj: any): boolean {
  * @param  {Object} joiObj
  * @param  {String} propertyName
  */
-export function getJoiMetaProperty (joiObj: any, propertyName: string): string|undefined {
-
+export function getJoiMetaProperty(joiObj: any, propertyName: string): string | undefined {
     // get headers added using meta function
     if (isJoi(joiObj) && hasJoiMeta(joiObj)) {
-
         const meta = (joiObj as any)._meta;
         let i = meta.length;
         while (i--) {
@@ -306,29 +276,26 @@ export function getJoiMetaProperty (joiObj: any, propertyName: string): string|u
     return undefined;
 }
 
-
 /**
  * get label from Joi object
  *
  * @param  {Object} joiObj
  * @return {String || Null}
  */
-export function getJoiLabel (joiObj: object): string|null {
-
+export function getJoiLabel(joiObj: object): string | null {
     // old version
     /* $lab:coverage:off$ */
-    if (Hoek.reach(joiObj, '_settings.language.label')) {
-        return Hoek.reach(joiObj, '_settings.language.label');
+    if (Hoek.reach(joiObj, "_settings.language.label")) {
+        return Hoek.reach(joiObj, "_settings.language.label");
     }
     /* $lab:coverage:on$ */
     // Joi > 10.9
-    if (Hoek.reach(joiObj, '_flags.label')) {
-        return Hoek.reach(joiObj, '_flags.label');
+    if (Hoek.reach(joiObj, "_flags.label")) {
+        return Hoek.reach(joiObj, "_flags.label");
     }
 
     return null;
 }
-
 
 /**
  * returns a javascript object into JOI object
@@ -337,74 +304,66 @@ export function getJoiLabel (joiObj: object): string|null {
  * @param  {Object} obj
  * @return {Object}
  */
-export function toJoiObject (obj: any): JoiObject {
-
-    if (isJoi(obj) === false && isObject(obj)) {
-        return Joi.object(obj);
+export function toJoiObject(obj: unknown): JoiObject {
+    if (isJoi(obj)) {
+        return obj;
+    } else if (isObject(obj)) {
+        return Joi.object(obj as { [index: string]: any });
     }
-    return obj;
 }
-
 
 /**
  * get chained functions for sorting
  *
  * @return {Function}
  */
-export const firstBy = (function () {
-
+export const firstBy = (() => {
     // code from https://github.com/Teun/thenBy.js
     // has its own tests
     /* $lab:coverage:off$ */
-    var makeCompareFunction = function (f, direction?) {
-
-        if (typeof (f) !== 'function') {
-            var prop = f;
+    function makeCompareFunction(f, direction?) {
+        if (typeof f !== "function") {
+            const prop = f;
             // make unary function
-            f = function (v1) {
-
+            f = v1 => {
                 return v1[prop];
             };
         }
         if (f.length === 1) {
             // f is a unary function mapping a single item to its sort score
-            var uf = f;
-            f = function (v1, v2) {
-
+            const uf = f;
+            f = (v1, v2) => {
                 return uf(v1) < uf(v2) ? -1 : uf(v1) > uf(v2) ? 1 : 0;
             };
         }
         if (direction === -1) {
-            return function (v1, v2) {
-
+            return (v1, v2) => {
                 return -f(v1, v2);
             };
         }
         return f;
-    };
+    }
     /* mixin for the `thenBy` property */
-    var extend = function (f, d?) {
-
+    function extend(f, d?) {
         f = makeCompareFunction(f, d);
         f.thenBy = tb;
         return f;
-    };
+    }
 
     /* adds a secondary compare function to the target function (`this` context)
        which is applied in case the first one returns 0 (equal)
        returns a new compare function, which has a `thenBy` method as well */
-    var tb = function (y, d) {
+    function tb(y, d) {
         y = makeCompareFunction(y, d);
-        
-        return extend((a, b) => {
 
+        return extend((a, b) => {
             return this(a, b) || y(a, b);
         });
-    };
+    }
+
     return extend;
     /* $lab:coverage:on$ */
 })();
-
 
 /**
  * create id
@@ -413,23 +372,21 @@ export const firstBy = (function () {
  * @param  {String} path
  * @return {String}
  */
-export function createId (method: string, path: string): string {
-
-    const self = this;
-    if (path.indexOf('/') > -1) {
-        let items = path.split('/');
-        items = items.map(function (item) {
+export function createId(method: string, path: string): string {
+    if (path.indexOf("/") > -1) {
+        let items = path.split("/");
+        items = items.map(item => {
             // replace chars such as '{'
-            item = item.replace(/[^\w\s]/gi, '');
-            return self.toTitleCase(item);
+            item = item.replace(/[^\w\s]/gi, "");
+
+            return this.toTitleCase(item);
         });
-        path = items.join('');
+        path = items.join("");
     } else {
-        path = self.toTitleCase(path);
+        path = this.toTitleCase(path);
     }
     return method.toLowerCase() + path;
 }
-
 
 /**
  * create toTitleCase
@@ -437,13 +394,11 @@ export function createId (method: string, path: string): string {
  * @param  {String} word
  * @return {String}
  */
-export function toTitleCase (word: string): string {
-
-    return word.replace(/\w\S*/g, (txt) => {
+export function toTitleCase(word: string): string {
+    return word.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
-
 
 /**
  * applies path replacements
@@ -453,16 +408,14 @@ export function toTitleCase (word: string): string {
  * @param  {Array} options
  * @return {String}
  */
-export function replaceInPath (path: string, applyTo: Array<any>, options: Array<any>): string {
-
-    options.forEach((option) => {
-        if (applyTo.indexOf(option.replaceIn) > -1 || option.replaceIn === 'all') {
+export function replaceInPath(path: string, applyTo: any[], options: any[]): string {
+    options.forEach(option => {
+        if (applyTo.indexOf(option.replaceIn) > -1 || option.replaceIn === "all") {
             path = path.replace(option.pattern, option.replacement);
         }
     });
     return path;
 }
-
 
 /**
  * removes trailing slash `/` from a string
@@ -470,9 +423,8 @@ export function replaceInPath (path: string, applyTo: Array<any>, options: Array
  * @param  {String} str
  * @return {String}
  */
-export function removeTrailingSlash (str: string): string {
-
-    if (str.endsWith('/')) {
+export function removeTrailingSlash(str: string): string {
+    if (str.endsWith("/")) {
         return str.slice(0, -1);
     }
     return str;
@@ -485,14 +437,13 @@ export function removeTrailingSlash (str: string): string {
  * @param  {Object} source
  * @return {Object}
  */
-export function assignVendorExtensions (target: object, source: object): object {
+export function assignVendorExtensions(target: object, source: object): object {
     if (!this.isObject(target) || !this.isObject(source)) {
         return target;
     }
 
-
     for (const sourceProperty in source) {
-        if(sourceProperty.startsWith('x-') && sourceProperty.length > 2) {
+        if (sourceProperty.startsWith("x-") && sourceProperty.length > 2) {
             // this may override existing x- properties which should not be an issue since values should be identical.
             target[sourceProperty] = Hoek.reach(source, sourceProperty) || null;
         }

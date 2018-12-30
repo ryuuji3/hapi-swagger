@@ -1,4 +1,4 @@
-import * as Utilities from './utilities';
+import * as Utilities from "./utilities";
 
 /**
  * append group property with name created from url path segments
@@ -11,12 +11,16 @@ import * as Utilities from './utilities';
  * @param  {Array} pathReplacements
  * @return {Array}
  */
-export function appendGroupByPath(pathPrefixSize: number, basePath: string, routes: Array<any>, pathReplacements: Array<any>): Array<any> {
+export function appendGroupByPath(
+    pathPrefixSize: number,
+    basePath: string,
+    routes: any[],
+    pathReplacements?: any[]
+): any[] {
+    const out: string[] = [];
 
-    let out: string[] = [];
-
-    routes.forEach((route) => {
-        let prefix = getNameByPath(pathPrefixSize, basePath, route.path, pathReplacements);
+    routes.forEach(route => {
+        const prefix = getNameByPath(pathPrefixSize, basePath, route.path, pathReplacements);
         // append tag reference to route
         route.group = [prefix];
         if (out.indexOf(prefix) === -1) {
@@ -25,8 +29,7 @@ export function appendGroupByPath(pathPrefixSize: number, basePath: string, rout
     });
 
     return out;
-};
-
+}
 
 /**
  * get a group name from url path segments
@@ -37,21 +40,24 @@ export function appendGroupByPath(pathPrefixSize: number, basePath: string, rout
  * @param  {Array} pathReplacements
  * @return {String}
  */
-export function getNameByPath(pathPrefixSize: Number, basePath: string, path: string, pathReplacements: Array<any>): string {
-
-
+export function getNameByPath(
+    pathPrefixSize: number,
+    basePath: string,
+    path: string,
+    pathReplacements?: any[]
+): string {
     if (pathReplacements) {
-        path = Utilities.replaceInPath(path, ['groups'], pathReplacements);
+        path = Utilities.replaceInPath(path, ["groups"], pathReplacements);
     }
 
     let i = 0;
-    let pathHead = [];
-    let parts = path.split('/');
+    const pathHead = [];
+    const parts = path.split("/");
 
     while (parts.length > 0) {
-        let item = parts.shift();
+        const item = parts.shift();
 
-        if (item !== '') {
+        if (item !== "") {
             pathHead.push(item);
             i++;
         }
@@ -59,15 +65,14 @@ export function getNameByPath(pathPrefixSize: Number, basePath: string, path: st
             break;
         }
     }
-    let name = pathHead.join('/');
+    let name = pathHead.join("/");
 
-    if (basePath !== '/' && Utilities.startsWith('/' + name, basePath)) {
+    if (basePath !== "/" && Utilities.startsWith("/" + name, basePath)) {
+        name = ("/" + name).replace(basePath, "");
 
-        name = ('/' + name).replace(basePath, '');
-
-        if (Utilities.startsWith(name, '/')) {
-            name = name.replace('/', '');
+        if (Utilities.startsWith(name, "/")) {
+            name = name.replace("/", "");
         }
     }
     return name;
-};
+}
